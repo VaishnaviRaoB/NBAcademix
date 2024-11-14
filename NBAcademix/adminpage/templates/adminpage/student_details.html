@@ -1,0 +1,117 @@
+{% extends 'adminpage/base.html' %}
+
+{% block title %}Student Details{% endblock %}
+
+{% block content %}
+<div class="academic-year-container">
+    <h2>Academic Years</h2>
+
+    <!-- Display the list of academic years as buttons with delete options -->
+    <div class="academic-year-list">
+        {% for batch in batches %}
+            <div class="academic-year-item">
+                <button type="button" class="year-button">{{ batch.academic_year }}</button>
+                <form method="post" action="" class="delete-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="delete_batch" value="{{ batch.id }}">
+                    <button type="submit" class="delete-button">Delete</button>
+                </form>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Form to add a new academic year -->
+    <form method="post" action="" class="add-form">
+        {% csrf_token %}
+        <input type="text" name="academic_year" placeholder="Enter academic year (e.g., 2021-2022)" required>
+        <button type="submit" class="add-button">Add Academic Year</button>
+    </form>
+</div>
+
+<style>
+    .academic-year-container {
+        max-width: 600px;
+        margin: 2rem auto;
+        padding: 1.5rem;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .academic-year-container h2 {
+        color: #800000;
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+    }
+
+    .academic-year-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        margin-top: 1rem;
+    }
+
+    .academic-year-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+
+    .year-button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .year-button:hover {
+        background-color: #0056b3;
+    }
+
+    .add-form {
+        margin-top: 2rem;
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .add-form input[type="text"] {
+        padding: 0.5rem;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        font-size: 1rem;
+        width: 70%;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .add-button,
+    .delete-button {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .add-button:hover {
+        background-color: #45a049;
+    }
+
+    .delete-button {
+        background-color: #ff4d4d;
+    }
+
+    .delete-button:hover {
+        background-color: #ff1a1a;
+    }
+</style>
+{% endblock %}

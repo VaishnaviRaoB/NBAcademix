@@ -6,7 +6,6 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import AuthenticationForm
-
 from .forms import (
     SignupForm, 
     UserUpdateForm, 
@@ -16,7 +15,7 @@ from .forms import (
 )
 from django.urls import reverse
 from django.http import HttpResponseRedirect
-from .models import UserProfile
+from .models import UserProfile,AcademicYear
 
 def landing_page(request):
     """Handle the landing page with login functionality"""
@@ -188,4 +187,31 @@ def handler404(request, exception):
 def handler500(request):
     """Custom 500 error handler"""
     return render(request, 'adminpage/500.html', status=500)
+@login_required
+def student_details_view(request):
+    """Display and manage academic years in the student details view."""
+    batches = AcademicYear.objects.all()
+    
+    if request.method == 'POST':
+        # Adding a new academic year
+        if 'academic_year' in request.POST:
+            new_academic_year = request.POST.get('academic_year')
+            if new_academic_year:
+                # Check if the academic year already exists
+                if AcademicYear.objects.filter(academic_year=new_academic_year).exists():
+                    messages.error(request, "This academic year already exists.")
+                else:
+                    AcademicYear.objects.create(academic_year=new_academic_year)
+                    messages.success(request, "Academic year added successfully!")
+                return redirect('student_details')
+        
+        # Deleting an academic year
+        elif 'delete_batch' in request.POST:
+            batch_id = request.POST.get('delete_batch')
+            batch = get_object_or_404(AcademicYear, id=batch_id)
+            batch.delete()
+            messages.success(request, "Academic year deleted successfully!")
+            return redirect('student_details')
+
+    return render(request, 'adminpage/student_details.html', {'batches': batches})
 

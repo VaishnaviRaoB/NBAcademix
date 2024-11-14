@@ -33,4 +33,8 @@ class StudentDocument(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.batch}"
-    
+class AcademicYear(models.Model):
+    academic_year = models.CharField(max_length=9)  # e.g., '2023'
+
+    def __str__(self):
+        return self.name    
