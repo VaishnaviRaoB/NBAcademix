@@ -1,28 +1,74 @@
-<!-- adminpage/templates/adminpage/landing_page.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-</head>
-<body>
-    <h1>Login</h1>
-    
-    <!-- Display messages -->
-    {% if messages %}
-        {% for message in messages %}
-            <div style="color: red;">{{ message }}</div>
-        {% endfor %}
-    {% endif %}
+{% extends 'adminpage/base.html' %}
 
-    <div style="border:1px solid #ddd; padding:20px; width:300px; margin:auto;">
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Login</button>
-        </form>
-        <p>Don't have an account? <a href="{% url 'signup' %}">Create one</a></p>
+{% block title %}Welcome to NBAcademix{% endblock %}
+
+{% block content %}
+<div class="landing-container">
+    <div class="landing-content">
+        <h1>Welcome to NBAcademix</h1>
+        
+        <div class="form-container">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                    </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary w-100">Login</button>
+            </form>
+            <p class="signup-link">
+                Don't have an account? <a href="{% url 'signup' %}">Create one</a>
+            </p>
+        </div>
     </div>
-</body>
-</html>
+</div>
+
+<style>
+.landing-container {
+    min-height: calc(100vh - 140px); /* Adjust for navbar and footer */
+    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),
+                url('https://source.unsplash.com/random/1920x1080/?basketball') no-repeat center center;
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+}
+
+.landing-content {
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.landing-content h1 {
+    color: white;
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    animation: fadeIn 1s ease;
+}
+
+.signup-link {
+    margin-top: 1rem;
+    color: #333;
+}
+
+.signup-link a {
+    color: #800000;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.signup-link a:hover {
+    text-decoration: underline;
+}
+</style>
+{% endblock %}

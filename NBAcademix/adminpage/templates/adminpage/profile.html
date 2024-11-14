@@ -1,14 +1,291 @@
-<!-- adminpage/templates/adminpage/profile.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile</title>
-</head>
-<body>
-    <h1>User Profile</h1>
-    <p>Welcome, {{ user.username }}! Here’s your profile page.</p>
-    <a href="{% url 'homepage' %}">Back to Homepage</a>
-</body>
-</html>
+{% extends 'adminpage/base.html' %}
+
+{% block title %}Profile Settings - NBAcademix{% endblock %}
+
+{% block content %}
+<!-- Back arrow navigation -->
+<div class="navbar-extension">
+    <a href="{% url 'homepage' %}" class="back-link">
+        <i class="fas fa-arrow-left"></i>
+        Back to Homepage
+    </a>
+</div>
+
+<div class="profile-container">
+    <div class="profile-card">
+        <div class="profile-header">
+            <h2>Profile Settings</h2>
+        </div>
+        
+        <div class="profile-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <!-- Profile Information Form -->
+            <form method="post">
+                {% csrf_token %}
+                <h3>Personal Information</h3>
+                
+                <!-- User Form -->
+                {% for field in user_form %}
+                    <div class="form-group">
+                        <label>{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="field-error">
+                                {{ field.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                
+                <!-- Profile Form -->
+                {% for field in profile_form %}
+                    <div class="form-group">
+                        <label>{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="field-error">
+                                {{ field.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                
+                <div class="button-group">
+                    <button type="submit" name="update_profile" class="btn btn-primary">Update Profile</button>
+                </div>
+            </form>
+
+            <!-- Password Change Form -->
+            <form method="post" class="mt-4">
+                {% csrf_token %}
+                <h3>Change Password</h3>
+                {% for field in password_form %}
+                    <div class="form-group">
+                        <label>{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="field-error">
+                                {{ field.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                
+                <div class="button-group">
+                    <button type="submit" name="change_password" class="btn btn-secondary">Change Password</button>
+                </div>
+            </form>
+        </div>
+  
+        <div class="profile-footer">
+            <div class="user-info">
+                <h4>Account Information</h4>
+                <div class="info-item">
+                    <span class="label">Username:</span>
+                    <span class="value">{{ user.username }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Email:</span>
+                    <span class="value">{{ user.email }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Phone:</span>
+                    <span class="value">{{ user.userprofile.phone_number }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Joined:</span>
+                    <span class="value">{{ user.date_joined|date:"F j, Y" }}</span>
+                </div>
+            </div>
+            <div class="delete-account-section mt-4">
+                <h4>Danger Zone</h4>
+                <form action="{% url 'delete_account' %}" method="post" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt"></i>
+                        Delete Account
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Profile specific styles */
+.profile-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.profile-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.profile-header {
+    background: #800000;
+    color: white;
+    padding: 1.5rem;
+}
+
+.profile-header h2 {
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+.profile-body {
+    padding: 2rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.profile-footer {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-top: 1px solid #eee;
+}
+
+.user-info h4 {
+    color: #800000;
+    margin-bottom: 1rem;
+}
+
+.info-item {
+    margin-bottom: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.info-item .label {
+    font-weight: 500;
+    color: #555;
+    min-width: 100px;
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+/* Override and extend base button styles */
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+}
+
+/* Alert messages styling */
+.alert {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    border: 1px solid transparent;
+}
+
+.field-error {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* Back navigation styling */
+.navbar-extension {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-bottom: 1px solid #eee;
+}
+
+.back-link {
+    color: #800000;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: color 0.2s ease;
+}
+
+.back-link:hover {
+    color: #600000;
+}
+
+/* Delete account section styling */
+.delete-account-section {
+    padding-top: 1.5rem;
+    margin-top: 1.5rem;
+    border-top: 1px solid #eee;
+}
+
+.delete-account-section h4 {
+    color: #dc3545;
+    margin-bottom: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .profile-container {
+        margin: 1rem auto;
+    }
+    
+    .profile-header {
+        padding: 1rem;
+    }
+    
+    .profile-body {
+        padding: 1rem;
+    }
+    
+    .profile-footer {
+        padding: 1rem;
+    }
+    
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .button-group {
+        flex-direction: column;
+    }
+    
+    .info-item {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .info-item .label {
+        min-width: auto;
+    }
+}
+</style>
+{% endblock %}
