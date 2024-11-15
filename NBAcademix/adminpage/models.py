@@ -37,4 +37,8 @@ class AcademicYear(models.Model):
     academic_year = models.CharField(max_length=9)  # e.g., '2023'
 
     def __str__(self):
-        return self.name    
+        return self.academic_year    
+def save_student_document(student_batch, academic_year):
+    academic_year_obj, _ = AcademicYear.objects.get_or_create(academic_year=academic_year)
+    student_document = StudentDocument(batch=student_batch, academic_year=academic_year_obj)
+    student_document.save()

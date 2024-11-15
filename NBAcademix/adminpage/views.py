@@ -15,7 +15,7 @@ from .forms import (
 )
 from django.urls import reverse
 from django.http import HttpResponseRedirect
-from .models import UserProfile,AcademicYear
+from .models import UserProfile,AcademicYear,StudentDocument
 
 def landing_page(request):
     """Handle the landing page with login functionality"""
@@ -214,4 +214,14 @@ def student_details_view(request):
             return redirect('student_details')
 
     return render(request, 'adminpage/student_details.html', {'batches': batches})
-
+@login_required
+def upload_file_view(request, batch_id):
+    if request.method == 'POST':
+        batch = get_object_or_404(AcademicYear, id=batch_id)
+        file = request.FILES.get('document')
+        if file:
+            StudentDocument.objects.create(batch=batch, document=file, title=file.name)
+            messages.success(request, "File uploaded successfully!")
+        else:
+            messages.error(request, "No file selected for upload.")
+    return redirect('student_details')

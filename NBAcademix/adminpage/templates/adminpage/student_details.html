@@ -6,11 +6,27 @@
 <div class="academic-year-container">
     <h2>Academic Years</h2>
 
-    <!-- Display the list of academic years as buttons with delete options -->
+    <!-- Display the list of academic years as buttons with delete and upload options -->
     <div class="academic-year-list">
         {% for batch in batches %}
             <div class="academic-year-item">
+                <!-- Year button -->
                 <button type="button" class="year-button">{{ batch.academic_year }}</button>
+
+                <!-- Upload file form -->
+                <form method="post" action="{% url 'upload_file_view' batch.id %}" enctype="multipart/form-data" class="upload-form">
+                    {% csrf_token %}
+                    <!-- Hidden file input -->
+                    <input type="file" name="document" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" id="file-input-{{ batch.id }}" required style="display:none;">
+                    
+                    <!-- Button to open file dialog -->
+                    <button type="button" onclick="document.getElementById('file-input-{{ batch.id }}').click();" class="upload-button">Choose File</button>
+                    
+                    <!-- Submit button -->
+                    <button type="submit" class="submit-button">Upload</button>
+                </form>
+
+                <!-- Delete form -->
                 <form method="post" action="" class="delete-form">
                     {% csrf_token %}
                     <input type="hidden" name="delete_batch" value="{{ batch.id }}">
@@ -27,6 +43,15 @@
         <button type="submit" class="add-button">Add Academic Year</button>
     </form>
 </div>
+
+<script>
+    document.querySelectorAll('.upload-button').forEach(function(button) {
+        button.addEventListener('click', function() {
+            var fileInput = this.previousElementSibling;
+            fileInput.click();
+        });
+    });
+</script>
 
 <style>
     .academic-year-container {
@@ -58,7 +83,7 @@
         gap: 0.5rem;
         justify-content: center;
     }
-
+   
     .year-button {
         background-color: #007bff;
         color: white;
@@ -112,6 +137,39 @@
 
     .delete-button:hover {
         background-color: #ff1a1a;
+    }
+    .upload-form input[type="file"] {
+        display: none;
+    }
+
+    .upload-button {
+        background-color: #008CBA;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .upload-button:hover {
+        background-color: #005f73;
+    }
+
+    .submit-button {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .submit-button:hover {
+        background-color: #45a049;
     }
 </style>
 {% endblock %}

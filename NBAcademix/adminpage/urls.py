@@ -9,5 +9,5 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     path('delete-account/', views.delete_account, name='delete_account'), 
     path('student-details/', views.student_details_view, name='student_details'),
- # Add this line
+    path('upload-file/<int:batch_id>/', views.upload_file_view, name='upload_file_view'),# Add this line
 ]
