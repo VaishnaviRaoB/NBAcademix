@@ -10,19 +10,12 @@
     <div class="academic-year-list">
         {% for batch in batches %}
             <div class="academic-year-item">
-                <!-- Year button -->
                 <button type="button" class="year-button">{{ batch.academic_year }}</button>
 
                 <!-- Upload file form -->
-                <form method="post" action="{% url 'upload_file_view' batch.id %}" enctype="multipart/form-data" class="upload-form">
+                <form method="post" action="{% url 'upload_file_view' batch.id %}" enctype="multipart/form-data">
                     {% csrf_token %}
-                    <!-- Hidden file input -->
-                    <input type="file" name="document" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" id="file-input-{{ batch.id }}" required style="display:none;">
-                    
-                    <!-- Button to open file dialog -->
-                    <button type="button" onclick="document.getElementById('file-input-{{ batch.id }}').click();" class="upload-button">Choose File</button>
-                    
-                    <!-- Submit button -->
+                    <input type="file" name="document" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" required>
                     <button type="submit" class="submit-button">Upload</button>
                 </form>
 
@@ -39,7 +32,7 @@
     <!-- Form to add a new academic year -->
     <form method="post" action="" class="add-form">
         {% csrf_token %}
-        <input type="text" name="academic_year" placeholder="Enter academic year (e.g., 2021-2022)" required>
+        <input type="text" name="academic_year" placeholder="Enter academic year (e.g., 2023-2024)" required>
         <button type="submit" class="add-button">Add Academic Year</button>
     </form>
 </div>
@@ -63,7 +56,11 @@
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         text-align: center;
     }
-
+    iframe {
+        border: none;
+        max-width: 100%;
+        height: 500px;
+    }
     .academic-year-container h2 {
         color: #800000;
         font-size: 1.8rem;

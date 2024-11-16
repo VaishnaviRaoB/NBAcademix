@@ -26,7 +26,11 @@ SECRET_KEY = 'django-insecure-xqnz+i^-7z#=l4*vtbi#$fgvt_zin=hg@v#1*6dpd^e$aql2ri
 DEBUG = True
 
 ALLOWED_HOSTS = []
+import os
 
+# For handling file uploads
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Application definition
 

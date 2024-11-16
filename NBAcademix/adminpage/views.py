@@ -189,39 +189,50 @@ def handler500(request):
     return render(request, 'adminpage/500.html', status=500)
 @login_required
 def student_details_view(request):
-    """Display and manage academic years in the student details view."""
+    """Display and manage academic years and files."""
     batches = AcademicYear.objects.all()
-    
+
     if request.method == 'POST':
         # Adding a new academic year
         if 'academic_year' in request.POST:
-            new_academic_year = request.POST.get('academic_year')
-            if new_academic_year:
-                # Check if the academic year already exists
-                if AcademicYear.objects.filter(academic_year=new_academic_year).exists():
-                    messages.error(request, "This academic year already exists.")
-                else:
-                    AcademicYear.objects.create(academic_year=new_academic_year)
-                    messages.success(request, "Academic year added successfully!")
-                return redirect('student_details')
-        
+            academic_year = request.POST.get('academic_year')
+            if academic_year:
+                try:
+                    AcademicYear.objects.create(academic_year=academic_year)
+                    messages.success(request, f'Academic year "{academic_year}" added successfully.')
+                except Exception as e:
+                    messages.error(request, f'Error adding academic year: {str(e)}')
+            else:
+                messages.error(request, 'Please provide a valid academic year.')
+
         # Deleting an academic year
-        elif 'delete_batch' in request.POST:
+        if 'delete_batch' in request.POST:
             batch_id = request.POST.get('delete_batch')
-            batch = get_object_or_404(AcademicYear, id=batch_id)
-            batch.delete()
-            messages.success(request, "Academic year deleted successfully!")
-            return redirect('student_details')
+            try:
+                batch = AcademicYear.objects.get(id=batch_id)
+                batch.delete()
+                messages.success(request, f'Academic year "{batch.academic_year}" deleted successfully.')
+            except AcademicYear.DoesNotExist:
+                messages.error(request, 'The specified academic year does not exist.')
+            except Exception as e:
+                messages.error(request, f'Error deleting academic year: {str(e)}')
 
     return render(request, 'adminpage/student_details.html', {'batches': batches})
+
+
 @login_required
 def upload_file_view(request, batch_id):
+    """Handle file upload for a specific academic year."""
     if request.method == 'POST':
-        batch = get_object_or_404(AcademicYear, id=batch_id)
-        file = request.FILES.get('document')
-        if file:
-            StudentDocument.objects.create(batch=batch, document=file, title=file.name)
-            messages.success(request, "File uploaded successfully!")
-        else:
-            messages.error(request, "No file selected for upload.")
+        try:
+            batch = AcademicYear.objects.get(id=batch_id)
+            document = request.FILES['document']
+            StudentDocument.objects.create(batch=batch, document=document)
+            messages.success(request, 'File uploaded successfully.')
+        except AcademicYear.DoesNotExist:
+            messages.error(request, 'Academic year not found.')
+        except Exception as e:
+            messages.error(request, f'An error occurred: {str(e)}')
     return redirect('student_details')
+
+
