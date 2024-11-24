@@ -54,3 +54,22 @@ def save_student_document(batch_name, academic_year, file_title, file):
     )
     student_document.save()
     return student_document
+
+class StudentPerformance(models.Model):
+    academic_year_in = models.CharField(max_length=50)  # e.g., FIRST, SECOND
+    academic_year = models.CharField(max_length=20)  # e.g., 2023-2024
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['academic_year_in', 'academic_year']
+        
+    def __str__(self):
+        return f"{self.academic_year_in} Year - {self.academic_year}"
+
+class PerformanceDocument(models.Model):
+    performance = models.ForeignKey(StudentPerformance, on_delete=models.CASCADE, related_name='documents')
+    document = models.FileField(upload_to='performance_documents/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Document for {self.performance} - {self.uploaded_at}"

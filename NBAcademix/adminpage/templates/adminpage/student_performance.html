@@ -1,0 +1,354 @@
+{% extends 'adminpage/base.html' %}
+
+{% block title %}Student Performance{% endblock %}
+
+{% block content %}
+<div class="performance-container">
+    <h2>Student Performance Records</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Display the list of performance records -->
+    <div class="performance-list">
+        {% for performance in performances %}
+            <div class="performance-item">
+                <button type="button" class="year-button" onclick="openModal('modal-{{ performance.id }}')">
+                    {{ performance.academic_year_in }} Year ({{ performance.academic_year }})
+                </button>
+
+                <!-- Upload file form -->
+                <form method="post" action="{% url 'upload_performance_file' performance.id %}" enctype="multipart/form-data" class="upload-form">
+                    {% csrf_token %}
+                    <input type="file" name="document" accept=".pdf,.doc,.docx,.xls,.xlsx" required>
+                    <button type="submit" class="submit-button">Upload</button>
+                </form>
+
+                <!-- Delete form -->
+                <form method="post" action="" class="delete-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="delete_performance" value="{{ performance.id }}">
+                    <button type="submit" class="delete-button">Delete</button>
+                </form>
+            </div>
+
+            <!-- Modal for documents -->
+            <div id="modal-{{ performance.id }}" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Documents for {{ performance.academic_year_in }} Year ({{ performance.academic_year }})</h3>
+                        <span class="close" onclick="closeModal('modal-{{ performance.id }}')">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        {% if performance.documents.all %}
+                            <div class="document-grid">
+                                {% for doc in performance.documents.all %}
+                                    <div class="document-card">
+                                        <div class="document-icon">
+                                            <i class="fas fa-file-alt"></i>
+                                        </div>
+                                        <div class="document-info">
+                                            <div class="document-actions">
+                                                <a href="{{ doc.document.url }}" target="_blank" class="document-link">
+                                                    View
+                                                </a>
+                                                <a href="{{ doc.document.url }}" download class="document-link download-link">
+                                                    Download
+                                                </a>
+                                            </div>
+                                            <div class="document-date">
+                                                {{ doc.uploaded_at|date:"d/m/Y H:i" }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="no-documents">No documents uploaded yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Form to add a new performance record -->
+    <form method="post" action="" class="add-form">
+        {% csrf_token %}
+        <select name="academic_year_in" required>
+            <option value="" disabled selected>Select Year</option>
+            <option value="FIRST">FIRST YEAR</option>
+            <option value="SECOND">SECOND YEAR</option>
+            <option value="THIRD">THIRD YEAR</option>
+            <option value="FOURTH">FOURTH YEAR</option>
+        </select>
+        <input type="text" name="academic_year" placeholder="Enter academic year (e.g., 2023-2024)" required>
+        <button type="submit" class="add-button">Add Performance Record</button>
+    </form>
+</div>
+
+<style>
+    .performance-container {
+        padding: 20px;
+        width: 700px;
+        margin: 0 auto;
+    }
+
+    .performance-container h2 {
+        color: #502c34;
+        margin-bottom: 20px;
+    }
+
+    .performance-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+
+    .performance-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+
+    .year-button {
+        background-color: #34495e;
+        color: white;
+        border: none;
+        width: 150px;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .year-button:hover {
+        background-color: #2c3e50;
+    }
+
+    .upload-form {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .submit-button {
+        background-color: #27ae60;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .submit-button:hover {
+        background-color: #219a52;
+    }
+
+    .delete-button {
+        background-color: #e74c3c;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .delete-button:hover {
+        background-color: #c0392b;
+    }
+
+    .add-form {
+        display: flex;
+        gap: 15px;
+        margin-top: 20px;
+    }
+
+    .add-form select,
+    .add-form input {
+        padding: 8px;
+        border: 1px solid #bdc3c7;
+        border-radius: 5px;
+    }
+
+    .add-button {
+        background-color: #3498db;
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .add-button:hover {
+        background-color: #2980b9;
+    }
+
+    /* Modal styles */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+    }
+
+    .modal-content {
+        position: relative;
+        background-color: #fff;
+        margin: 5% auto;
+        padding: 0;
+        width: 70%;
+        max-width: 800px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-header {
+        padding: 1rem;
+        background-color: #34495e;
+        color: white;
+        border-radius: 8px 8px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+    }
+
+    .close {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .close:hover {
+        color: #bdc3c7;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .document-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+
+    .document-card {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: transform 0.2s;
+    }
+
+    .document-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .document-icon {
+        font-size: 2rem;
+        color: #34495e;
+    }
+
+    .document-info {
+        flex: 1;
+    }
+
+    .document-actions {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+
+    .document-link {
+        display: inline-block;
+        color: white;
+        text-decoration: none;
+        font-weight: 500;
+        padding: 5px 10px;
+        border-radius: 4px;
+        background-color: #34495e;
+    }
+
+    .download-link {
+        background-color: #27ae60;
+    }
+
+    .document-link:hover {
+        opacity: 0.9;
+    }
+
+    .document-date {
+        font-size: 0.875rem;
+        color: #7f8c8d;
+    }
+
+    .no-documents {
+        text-align: center;
+        color: #7f8c8d;
+        padding: 2rem;
+    }
+</style>
+
+<script>
+function openModal(modalId) {
+    document.getElementById(modalId).style.display = "block";
+    document.body.style.overflow = "hidden";  // Prevent scrolling when modal is open
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = "none";
+    document.body.style.overflow = "auto";  // Restore scrolling
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = "none";
+        document.body.style.overflow = "auto";
+    }
+}
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === "Escape") {
+        const modals = document.getElementsByClassName('modal');
+        for (let modal of modals) {
+            if (modal.style.display === "block") {
+                modal.style.display = "none";
+                document.body.style.overflow = "auto";
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

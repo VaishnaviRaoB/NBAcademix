@@ -6,6 +6,12 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import AuthenticationForm
+from .models import StudentPerformance, PerformanceDocument
+from django.http import HttpResponse
+from wsgiref.util import FileWrapper
+import os
+import zipfile
+from io import BytesIO
 from .forms import (
     SignupForm, 
     UserUpdateForm, 
@@ -236,3 +242,85 @@ def upload_file_view(request, batch_id):
     return redirect('student_details')
 
 
+@login_required
+def student_performance_view(request):
+    """Display and manage student performance records."""
+    performances = StudentPerformance.objects.all().order_by('-created_at')
+
+    if request.method == 'POST':
+        # Adding a new performance record
+        if 'academic_year' in request.POST:
+            academic_year_in = request.POST.get('academic_year_in')
+            academic_year = request.POST.get('academic_year')
+            
+            if academic_year and academic_year_in:
+                try:
+                    StudentPerformance.objects.create(
+                        academic_year_in=academic_year_in,
+                        academic_year=academic_year
+                    )
+                    messages.success(request, f'Performance record for {academic_year_in} Year ({academic_year}) added successfully.')
+                except Exception as e:
+                    messages.error(request, f'Error adding performance record: {str(e)}')
+            else:
+                messages.error(request, 'Please provide all required information.')
+
+        # Deleting a performance record
+        if 'delete_performance' in request.POST:
+            performance_id = request.POST.get('delete_performance')
+            try:
+                performance = StudentPerformance.objects.get(id=performance_id)
+                performance.delete()
+                messages.success(request, f'Performance record deleted successfully.')
+            except StudentPerformance.DoesNotExist:
+                messages.error(request, 'The specified performance record does not exist.')
+            except Exception as e:
+                messages.error(request, f'Error deleting performance record: {str(e)}')
+
+    return render(request, 'adminpage/student_performance.html', {'performances': performances})
+
+@login_required
+def upload_performance_file(request, performance_id):
+    """Handle file upload for a specific performance record."""
+    if request.method == 'POST':
+        try:
+            performance = StudentPerformance.objects.get(id=performance_id)
+            document = request.FILES['document']
+            PerformanceDocument.objects.create(
+                performance=performance,
+                document=document
+            )
+            messages.success(request, 'File uploaded successfully.')
+        except StudentPerformance.DoesNotExist:
+            messages.error(request, 'Performance record not found.')
+        except Exception as e:
+            messages.error(request, f'An error occurred: {str(e)}')
+    return redirect('student_performance')
+
+@login_required
+def download_performance_files(request, performance_id):
+    """Download all files for a specific performance record as a zip file."""
+    try:
+        performance = get_object_or_404(StudentPerformance, id=performance_id)
+        documents = performance.documents.all()
+        
+        if not documents:
+            messages.warning(request, 'No documents available to download.')
+            return redirect('student_performance')
+
+        # Create zip file in memory
+        zip_buffer = BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            for document in documents:
+                file_name = os.path.basename(document.document.name)
+                zip_file.writestr(file_name, document.document.read())
+        
+        # Prepare response
+        response = HttpResponse(zip_buffer.getvalue(), content_type='application/zip')
+        response['Content-Disposition'] = f'attachment; filename={performance.academic_year_in}_{performance.academic_year}_documents.zip'
+        
+        return response
+        
+    except Exception as e:
+        messages.error(request, f'Error downloading files: {str(e)}')
+        return redirect('student_performance')
