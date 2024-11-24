@@ -9,6 +9,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from .models import StudentPerformance, Document ,  UserProfile
 from django.http import HttpResponse
 from wsgiref.util import FileWrapper
+
 from django.urls import reverse
 from django.http import HttpResponseRedirect
 import os
@@ -196,10 +197,6 @@ def handler500(request):
     """Custom 500 error handler"""
     return render(request, 'adminpage/500.html', status=500)
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-
 @login_required
 def student_performance_view(request):
     """Display and manage student performance records."""
@@ -303,3 +300,4 @@ def delete_performance_file(request, document_id):
         messages.success(request, "File deleted successfully")
         return redirect('student_performance')
     return redirect('student_performance')
+

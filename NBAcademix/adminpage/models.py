@@ -35,3 +35,4 @@ class Document(models.Model):
 
     def __str__(self):
         return self.original_filename or os.path.basename(self.document.name)
+ 
