@@ -6,9 +6,11 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import AuthenticationForm
-from .models import StudentPerformance, PerformanceDocument
+from .models import StudentPerformance, Document ,  UserProfile
 from django.http import HttpResponse
 from wsgiref.util import FileWrapper
+from django.urls import reverse
+from django.http import HttpResponseRedirect
 import os
 import zipfile
 from io import BytesIO
@@ -19,9 +21,8 @@ from .forms import (
     CustomPasswordChangeForm,
     
 )
-from django.urls import reverse
-from django.http import HttpResponseRedirect
-from .models import UserProfile,AcademicYear,StudentDocument
+
+
 
 def landing_page(request):
     """Handle the landing page with login functionality"""
@@ -133,6 +134,7 @@ def profile(request):
         'password_form': password_form,
     }
     return render(request, 'adminpage/profile.html', context)
+
 @login_required
 def homepage(request):
     """Display the homepage for authenticated users"""
@@ -193,60 +195,16 @@ def handler404(request, exception):
 def handler500(request):
     """Custom 500 error handler"""
     return render(request, 'adminpage/500.html', status=500)
-@login_required
-def student_details_view(request):
-    """Display and manage academic years and files."""
-    batches = AcademicYear.objects.all()
 
-    if request.method == 'POST':
-        # Adding a new academic year
-        if 'academic_year' in request.POST:
-            academic_year = request.POST.get('academic_year')
-            if academic_year:
-                try:
-                    AcademicYear.objects.create(academic_year=academic_year)
-                    messages.success(request, f'Academic year "{academic_year}" added successfully.')
-                except Exception as e:
-                    messages.error(request, f'Error adding academic year: {str(e)}')
-            else:
-                messages.error(request, 'Please provide a valid academic year.')
-
-        # Deleting an academic year
-        if 'delete_batch' in request.POST:
-            batch_id = request.POST.get('delete_batch')
-            try:
-                batch = AcademicYear.objects.get(id=batch_id)
-                batch.delete()
-                messages.success(request, f'Academic year "{batch.academic_year}" deleted successfully.')
-            except AcademicYear.DoesNotExist:
-                messages.error(request, 'The specified academic year does not exist.')
-            except Exception as e:
-                messages.error(request, f'Error deleting academic year: {str(e)}')
-
-    return render(request, 'adminpage/student_details.html', {'batches': batches})
-
-
-@login_required
-def upload_file_view(request, batch_id):
-    """Handle file upload for a specific academic year."""
-    if request.method == 'POST':
-        try:
-            batch = AcademicYear.objects.get(id=batch_id)
-            document = request.FILES['document']
-            StudentDocument.objects.create(batch=batch, document=document)
-            messages.success(request, 'File uploaded successfully.')
-        except AcademicYear.DoesNotExist:
-            messages.error(request, 'Academic year not found.')
-        except Exception as e:
-            messages.error(request, f'An error occurred: {str(e)}')
-    return redirect('student_details')
-
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
 @login_required
 def student_performance_view(request):
     """Display and manage student performance records."""
     performances = StudentPerformance.objects.all().order_by('-created_at')
-
+    
     if request.method == 'POST':
         # Adding a new performance record
         if 'academic_year' in request.POST:
@@ -255,7 +213,7 @@ def student_performance_view(request):
             
             if academic_year and academic_year_in:
                 try:
-                    StudentPerformance.objects.create(
+                    performance = StudentPerformance.objects.create(
                         academic_year_in=academic_year_in,
                         academic_year=academic_year
                     )
@@ -264,37 +222,47 @@ def student_performance_view(request):
                     messages.error(request, f'Error adding performance record: {str(e)}')
             else:
                 messages.error(request, 'Please provide all required information.')
+        return redirect('student_performance')
+    
+    # For GET requests, render the template with the performances data
+    context = {
+        'performances': performances,
+    }
+    return render(request, 'adminpage/student_performance.html', context)
 
-        # Deleting a performance record
-        if 'delete_performance' in request.POST:
-            performance_id = request.POST.get('delete_performance')
-            try:
-                performance = StudentPerformance.objects.get(id=performance_id)
-                performance.delete()
-                messages.success(request, f'Performance record deleted successfully.')
-            except StudentPerformance.DoesNotExist:
-                messages.error(request, 'The specified performance record does not exist.')
-            except Exception as e:
-                messages.error(request, f'Error deleting performance record: {str(e)}')
+@login_required
+def delete_performance(request, performance_id):
+    performance = get_object_or_404(StudentPerformance, id=performance_id)
+    if request.method == 'POST':
+        # This will also delete all related documents due to CASCADE
+        performance.delete()
+        messages.success(request, "Performance record deleted successfully")
+        return redirect('student_performance')
+    return redirect('student_performance')
 
-    return render(request, 'adminpage/student_performance.html', {'performances': performances})
 
 @login_required
 def upload_performance_file(request, performance_id):
-    """Handle file upload for a specific performance record."""
-    if request.method == 'POST':
-        try:
-            performance = StudentPerformance.objects.get(id=performance_id)
-            document = request.FILES['document']
-            PerformanceDocument.objects.create(
+    try:
+        performance = get_object_or_404(StudentPerformance, id=performance_id)
+        
+        if request.method == 'POST' and request.FILES.get('document'):
+            uploaded_file = request.FILES['document']
+            
+            # Create new Document instance
+            document = Document(
                 performance=performance,
-                document=document
+                document=uploaded_file,
+                original_filename=uploaded_file.name  # Store the original filename
             )
-            messages.success(request, 'File uploaded successfully.')
-        except StudentPerformance.DoesNotExist:
-            messages.error(request, 'Performance record not found.')
-        except Exception as e:
-            messages.error(request, f'An error occurred: {str(e)}')
+            document.save()
+            
+            messages.success(request, f'File "{uploaded_file.name}" uploaded successfully')
+            return redirect('student_performance')
+            
+    except Exception as e:
+        messages.error(request, f'Error uploading file: {str(e)}')
+        
     return redirect('student_performance')
 
 @login_required
@@ -303,7 +271,7 @@ def download_performance_files(request, performance_id):
     try:
         performance = get_object_or_404(StudentPerformance, id=performance_id)
         documents = performance.documents.all()
-        
+
         if not documents:
             messages.warning(request, 'No documents available to download.')
             return redirect('student_performance')
@@ -314,13 +282,24 @@ def download_performance_files(request, performance_id):
             for document in documents:
                 file_name = os.path.basename(document.document.name)
                 zip_file.writestr(file_name, document.document.read())
-        
+
         # Prepare response
         response = HttpResponse(zip_buffer.getvalue(), content_type='application/zip')
         response['Content-Disposition'] = f'attachment; filename={performance.academic_year_in}_{performance.academic_year}_documents.zip'
-        
+
         return response
-        
+
     except Exception as e:
         messages.error(request, f'Error downloading files: {str(e)}')
         return redirect('student_performance')
+
+@login_required
+def delete_performance_file(request, document_id):
+    document = get_object_or_404(Document, id=document_id)
+    if request.method == 'POST':
+        performance = document.performance
+        document.document.delete()  # Delete the actual file
+        document.delete()  # Delete the database record
+        messages.success(request, "File deleted successfully")
+        return redirect('student_performance')
+    return redirect('student_performance')
