@@ -35,4 +35,18 @@ class Document(models.Model):
 
     def __str__(self):
         return self.original_filename or os.path.basename(self.document.name)
- 
+class StudentList(models.Model):
+    batch_year = models.CharField(max_length=50)  # e.g., 2020-2024
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Batch Year - {self.batch_year}"
+    
+class StudentDocument(models.Model):
+    document = models.FileField(upload_to='student_documents/')
+    original_filename = models.CharField(max_length=255, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    student_list = models.ForeignKey(StudentList, related_name='documents', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.original_filename or os.path.basename(self.document.name)

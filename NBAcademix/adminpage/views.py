@@ -6,7 +6,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import AuthenticationForm
-from .models import StudentPerformance, Document ,  UserProfile
+from .models import StudentPerformance, Document ,  UserProfile, StudentList, StudentDocument
 from django.http import HttpResponse
 from wsgiref.util import FileWrapper
 
@@ -301,3 +301,96 @@ def delete_performance_file(request, document_id):
         return redirect('student_performance')
     return redirect('student_performance')
 
+@login_required
+def student_list_view(request):
+    """Display and manage student lists."""
+    student_lists = StudentList.objects.all().order_by('-created_at')
+    
+    if request.method == 'POST':
+        if 'batch_year' in request.POST:
+            batch_year = request.POST.get('batch_year')
+            
+            if batch_year:
+                try:
+                    student_list = StudentList.objects.create(
+                        batch_year=batch_year
+                    )
+                    messages.success(request, f'Student list for batch {batch_year} added successfully.')
+                except Exception as e:
+                    messages.error(request, f'Error adding student list: {str(e)}')
+            else:
+                messages.error(request, 'Please provide batch year.')
+        return redirect('student_list')
+    
+    context = {
+        'student_lists': student_lists,
+    }
+    return render(request, 'adminpage/student_list.html', context)
+
+@login_required
+def delete_student_list(request, list_id):
+    student_list = get_object_or_404(StudentList, id=list_id)
+    if request.method == 'POST':
+        student_list.delete()
+        messages.success(request, "Student list deleted successfully")
+        return redirect('student_list')
+    return redirect('student_list')
+
+@login_required
+def upload_student_file(request, list_id):
+    try:
+        student_list = get_object_or_404(StudentList, id=list_id)
+        
+        if request.method == 'POST' and request.FILES.get('document'):
+            uploaded_file = request.FILES['document']
+            
+            document = StudentDocument(
+                student_list=student_list,
+                document=uploaded_file,
+                original_filename=uploaded_file.name
+            )
+            document.save()
+            
+            messages.success(request, f'File "{uploaded_file.name}" uploaded successfully')
+            return redirect('student_list')
+            
+    except Exception as e:
+        messages.error(request, f'Error uploading file: {str(e)}')
+        
+    return redirect('student_list')
+
+@login_required
+def download_student_files(request, list_id):
+    """Download all files for a specific student list as a zip file."""
+    try:
+        student_list = get_object_or_404(StudentList, id=list_id)
+        documents = student_list.documents.all()
+
+        if not documents:
+            messages.warning(request, 'No documents available to download.')
+            return redirect('student_list')
+
+        zip_buffer = BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            for document in documents:
+                file_name = os.path.basename(document.document.name)
+                zip_file.writestr(file_name, document.document.read())
+
+        response = HttpResponse(zip_buffer.getvalue(), content_type='application/zip')
+        response['Content-Disposition'] = f'attachment; filename={student_list.department}_{student_list.batch_year}_documents.zip'
+
+        return response
+
+    except Exception as e:
+        messages.error(request, f'Error downloading files: {str(e)}')
+        return redirect('student_list')
+
+@login_required
+def delete_student_file(request, document_id):
+    document = get_object_or_404(StudentDocument, id=document_id)
+    if request.method == 'POST':
+        document.document.delete()
+        document.delete()
+        messages.success(request, "File deleted successfully")
+        return redirect('student_list')
+    return redirect('student_list')
