@@ -13,8 +13,8 @@
                     <div class="alert alert-{{ message.tags }}">{{ message }}</div>
                 {% endfor %}
             {% endif %}
-
-            <form method="post">
+            
+            <form method="post" class="login-form">
                 {% csrf_token %}
                 {% for field in form %}
                     <div class="form-group">
@@ -22,7 +22,7 @@
                         {{ field }}
                     </div>
                 {% endfor %}
-                <button type="submit" class="btn btn-primary w-100">Login</button>
+                <button type="submit" class="btn-login">Login</button>
             </form>
             <p class="signup-link">
                 Don't have an account? <a href="{% url 'signup' %}">Create one</a>
@@ -33,7 +33,7 @@
 
 <style>
 .landing-container {
-    min-height: calc(100vh - 140px); /* Adjust for navbar and footer */
+    min-height: calc(100vh - 140px);
     background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),
                 url('https://source.unsplash.com/random/1920x1080/?basketball') no-repeat center center;
     background-size: cover;
@@ -53,12 +53,73 @@
     color: white;
     font-size: 2.5rem;
     margin-bottom: 2rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
     animation: fadeIn 1s ease;
 }
 
-.signup-link {
-    margin-top: 1rem;
+.form-container {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
     color: #333;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #800000;
+    box-shadow: 0 0 0 2px rgba(128, 0, 0, 0.1);
+}
+
+.btn-login {
+    background-color: #800000;
+    color: white;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.btn-login:hover {
+    background-color: #600000;
+}
+
+.signup-link {
+    margin-top: 1.5rem;
+    color: #555;
+    font-size: 0.9rem;
 }
 
 .signup-link a {
@@ -69,6 +130,30 @@
 
 .signup-link a:hover {
     text-decoration: underline;
+}
+
+.alert {
+    padding: 0.75rem;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 </style>
 {% endblock %}
