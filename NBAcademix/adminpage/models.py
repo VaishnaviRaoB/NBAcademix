@@ -50,3 +50,19 @@ class StudentDocument(models.Model):
 
     def __str__(self):
         return self.original_filename or os.path.basename(self.document.name)
+    
+class Achievement(models.Model):
+    event_name = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Event - {self.event_name}"
+    
+class AchievementDocument(models.Model):
+    document = models.FileField(upload_to='achievement_documents/')
+    original_filename = models.CharField(max_length=255, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    achievement = models.ForeignKey(Achievement, related_name='documents', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.original_filename or os.path.basename(self.document.name)

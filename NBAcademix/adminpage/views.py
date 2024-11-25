@@ -6,7 +6,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import AuthenticationForm
-from .models import StudentPerformance, Document ,  UserProfile, StudentList, StudentDocument
+from .models import StudentPerformance, Document ,  UserProfile, StudentList, StudentDocument, AchievementDocument, Achievement
 from django.http import HttpResponse
 from wsgiref.util import FileWrapper
 
@@ -394,3 +394,95 @@ def delete_student_file(request, document_id):
         messages.success(request, "File deleted successfully")
         return redirect('student_list')
     return redirect('student_list')
+@login_required
+def achievement_view(request):
+    """Display and manage achievements."""
+    achievements = Achievement.objects.all().order_by('-created_at')
+    
+    if request.method == 'POST':
+        if 'event_name' in request.POST:
+            event_name = request.POST.get('event_name')
+            
+            if event_name:
+                try:
+                    achievement = Achievement.objects.create(
+                        event_name=event_name
+                    )
+                    messages.success(request, f'Achievement for event "{event_name}" added successfully.')
+                except Exception as e:
+                    messages.error(request, f'Error adding achievement: {str(e)}')
+            else:
+                messages.error(request, 'Please provide event name.')
+        return redirect('achievement')
+    
+    context = {
+        'achievements': achievements,
+    }
+    return render(request, 'adminpage/achievement.html', context)
+
+@login_required
+def delete_achievement(request, achievement_id):
+    achievement = get_object_or_404(Achievement, id=achievement_id)
+    if request.method == 'POST':
+        achievement.delete()
+        messages.success(request, "Achievement deleted successfully")
+        return redirect('achievement')
+    return redirect('achievement')
+
+@login_required
+def upload_achievement_file(request, achievement_id):
+    try:
+        achievement = get_object_or_404(Achievement, id=achievement_id)
+        
+        if request.method == 'POST' and request.FILES.get('document'):
+            uploaded_file = request.FILES['document']
+            
+            document = AchievementDocument(
+                achievement=achievement,
+                document=uploaded_file,
+                original_filename=uploaded_file.name
+            )
+            document.save()
+            
+            messages.success(request, f'File "{uploaded_file.name}" uploaded successfully')
+            return redirect('achievement')
+            
+    except Exception as e:
+        messages.error(request, f'Error uploading file: {str(e)}')
+        
+    return redirect('achievement')
+
+@login_required
+def download_achievement_files(request, achievement_id):
+    try:
+        achievement = get_object_or_404(Achievement, id=achievement_id)
+        documents = achievement.documents.all()
+
+        if not documents:
+            messages.warning(request, 'No documents available to download.')
+            return redirect('achievement')
+
+        zip_buffer = BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            for document in documents:
+                file_name = os.path.basename(document.document.name)
+                zip_file.writestr(file_name, document.document.read())
+
+        response = HttpResponse(zip_buffer.getvalue(), content_type='application/zip')
+        response['Content-Disposition'] = f'attachment; filename={achievement.event_name}_documents.zip'
+
+        return response
+
+    except Exception as e:
+        messages.error(request, f'Error downloading files: {str(e)}')
+        return redirect('achievement')
+
+@login_required
+def delete_achievement_file(request, document_id):
+    document = get_object_or_404(AchievementDocument, id=document_id)
+    if request.method == 'POST':
+        document.document.delete()
+        document.delete()
+        messages.success(request, "File deleted successfully")
+        return redirect('achievement')
+    return redirect('achievement')
