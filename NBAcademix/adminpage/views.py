@@ -630,7 +630,8 @@ def generate_performance_chart(request, document_id):
     except Exception as e:
         messages.error(request, f"Error generating chart: {str(e)}")
         return redirect('student_performance')
-
+    
+@login_required
 def download_performance_chart(request, performance_id):
     performance = get_object_or_404(StudentPerformance, id=performance_id)
     
