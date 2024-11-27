@@ -26,5 +26,5 @@ urlpatterns = [
     path('download-achievement-files/<int:achievement_id>/', views.download_achievement_files, name='download_achievement_files'),
     path('delete-achievement-file/<int:document_id>/', views.delete_achievement_file, name='delete_achievement_file'),
     path('generate-performance-chart/<int:document_id>/', views.generate_performance_chart, name='generate_performance_chart'),
-    path('download-performance-chart/<int:performance_id>/', views.download_performance_chart, name='download_performance_chart')
+    path('download-performance-chart/<int:performance_id>/', views.download_performance_chart, name='download_performance_chart'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
