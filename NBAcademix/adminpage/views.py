@@ -493,7 +493,7 @@ def delete_achievement_file(request, document_id):
         return redirect('achievement')
     return redirect('achievement')
 
-@login_required
+@login_required 
 def generate_performance_chart(request, document_id):
     try:
         # Get the performance document
@@ -515,7 +515,7 @@ def generate_performance_chart(request, document_id):
             messages.error(request, f"Error reading Excel file: {str(e)}")
             return redirect('student_performance')
 
-        # Flexible column matching
+        # Flexible column matching function
         def find_column(possible_names):
             for name in possible_names:
                 matching_cols = [col for col in df.columns if name.lower() in col.lower()]
@@ -523,25 +523,39 @@ def generate_performance_chart(request, document_id):
                     return matching_cols[0]
             return None
 
-        # Find columns flexibly
-        sl_no_col = find_column(['sl.no', 'slno', 'serial', 'serial no'])
-        usn_col = find_column(['usn', 'usr', 'user'])
-        name_col = find_column(['name', 'student name'])
-        sgpa_iii_col = find_column(['sgpa-iii', 'sgpa iii', 'sgpa 3'])
-        sgpa_iv_col = find_column(['sgpa-iv', 'sgpa iv', 'sgpa 4'])
-        cgpa_col = find_column(['cgpa', 'cpi'])
-        detained_col = find_column(['detained?', 'detained', 'detention'])
+        # Enhanced SGPA column detection
+        def find_all_sgpa_columns(df):
+            sgpa_columns = {}
+            semester_patterns = [
+                ('I', ['sgpa-i', 'sgpa 1', 'sem-i', 'sem 1', 'semester 1', 'first semester', 'first sem']),
+                ('II', ['sgpa-ii', 'sgpa 2', 'sem-ii', 'sem 2', 'semester 2', 'second semester', 'second sem']),
+                ('III', ['sgpa-iii', 'sgpa 3', 'sem-iii', 'sem 3', 'semester 3', 'third semester', 'third sem']),
+                ('IV', ['sgpa-iv', 'sgpa 4', 'sem-iv', 'sem 4', 'semester 4', 'fourth semester', 'fourth sem']),
+                ('V', ['sgpa-v', 'sgpa 5', 'sem-v', 'sem 5', 'semester 5', 'fifth semester', 'fifth sem']),
+                ('VI', ['sgpa-vi', 'sgpa 6', 'sem-vi', 'sem 6', 'semester 6', 'sixth semester', 'sixth sem']),
+                ('VII', ['sgpa-vii', 'sgpa 7', 'sem-vii', 'sem 7', 'semester 7', 'seventh semester', 'seventh sem']),
+                ('VIII', ['sgpa-viii', 'sgpa 8', 'sem-viii', 'sem 8', 'semester 8', 'eighth semester', 'eighth sem'])
+            ]
+            
+            # Collect all SGPA columns
+            for sem, patterns in semester_patterns:
+                col = find_column(patterns)
+                if col:
+                    sgpa_columns[f'SGPA-{sem}'] = col
+            
+            return sgpa_columns
 
-        # Validate columns
+        # Find required columns
         required_columns = {
-            'SL.NO': sl_no_col,
-            'USN': usn_col,
-            'NAME': name_col,
-            'SGPA-III': sgpa_iii_col,
-            'SGPA-IV': sgpa_iv_col,
-            'CGPA': cgpa_col,
-            'DETAINED?': detained_col
+            'SL.NO': find_column(['sl.no', 'slno', 'serial', 'serial no']),
+            'USN': find_column(['usn', 'usr', 'user']),
+            'NAME': find_column(['name', 'student name']),
+            'CGPA': find_column(['cgpa', 'cpi']),
+            'DETAINED?': find_column(['detained?', 'detained', 'detention'])
         }
+
+        # Find SGPA columns dynamically
+        sgpa_columns = find_all_sgpa_columns(df)
 
         # Check if all required columns are found
         missing_columns = [key for key, value in required_columns.items() if value is None]
@@ -550,50 +564,69 @@ def generate_performance_chart(request, document_id):
             return redirect('student_performance')
 
         # Rename columns to standard names
-        df = df.rename(columns={
-            sl_no_col: 'SL.NO',
-            usn_col: 'USN',
-            name_col: 'NAME',
-            sgpa_iii_col: 'SGPA-III',
-            sgpa_iv_col: 'SGPA-IV',
-            cgpa_col: 'CGPA',
-            detained_col: 'DETAINED?'
-        })
+        rename_dict = {
+            **{old: new for new, old in required_columns.items()},
+            **{old: new for new, old in sgpa_columns.items()}
+        }
+        df = df.rename(columns=rename_dict)
 
         # Calculate total number of students
         total_students = len(df)
 
+        # Identify successful students (not detained)
+        df['DETAINED?'] = df['DETAINED?'].fillna('NO')  # Handle potential NaN values
+        successful_students = df[df['DETAINED?'].str.upper() != 'YES']
+
+        # Calculate mean percentage of successful students
+        mean_percentage_successful = successful_students['CGPA'].mean() if len(successful_students) > 0 else 0
+
+        # Count successful students
+        total_successful_students = len(successful_students)
+
+        # Calculate Academic Performance Index (API)
+        api = mean_percentage_successful * (total_successful_students / total_students) if total_students > 0 else 0
+
         # Calculate total and average CGPA
         total_cgpa = df['CGPA'].sum()
-        class_avg_cgpa = total_cgpa / total_students
+        class_avg_cgpa = total_cgpa / total_students if total_students > 0 else 0
 
-        # Calculate semester-specific averages
-        avg_sgpa_iii = df['SGPA-III'].mean()
-        avg_sgpa_iv = df['SGPA-IV'].mean()
+        # Calculate semester-specific averages dynamically
+        semester_averages = {}
+        for sem_col in [col for col in df.columns if col.startswith('SGPA-')]:
+            # Ensure numeric conversion and handle potential errors
+            df[sem_col] = pd.to_numeric(df[sem_col], errors='coerce')
+            semester_avg = df[sem_col].mean()
+            semester_averages[sem_col] = semester_avg
 
         # Count detained students (case-insensitive)
         detained_count = len(df[df['DETAINED?'].str.upper() == 'YES'])
 
         # Create matplotlib figure
-        plt.figure(figsize=(12, 6))
+        plt.figure(figsize=(15, 8))  # Increased height to accommodate more information
         plt.suptitle(f'Class Performance - {performance.academic_year}', fontsize=16)
 
-
         # Subplot 1: Bar Chart - SGPA and CGPA Comparison
-        plt.subplot(1, 2, 1)
-        plt.bar(['Avg SGPA-III', 'Avg SGPA-IV', 'Avg CGPA'], 
-                [avg_sgpa_iii, avg_sgpa_iv, class_avg_cgpa], 
-                color=['maroon', 'navy', 'green'])
+        plt.subplot(2, 2, 1)
+        
+        # Prepare data for plotting
+        labels = list(semester_averages.keys()) + ['Avg CGPA']
+        values = list(semester_averages.values()) + [class_avg_cgpa]
+        
+        # Use a color palette
+        colors = ['maroon', 'navy', 'green', 'purple', 'orange', 'teal', 'brown', 'magenta', 'cyan'][:len(labels)]
+        
+        plt.bar(labels, values, color=colors)
         plt.title('Performance Metrics')
         plt.ylabel('Score')
         plt.ylim(0, 10)  # Assuming scores are out of 10
+        plt.xticks(rotation=45, ha='right')
         
         # Add value labels on top of each bar
-        for i, v in enumerate([avg_sgpa_iii, avg_sgpa_iv, class_avg_cgpa]):
+        for i, v in enumerate(values):
             plt.text(i, v, f'{v:.2f}', ha='center', va='bottom', fontweight='bold')
 
         # Subplot 2: Pie Chart - Detention Status
-        plt.subplot(1, 2, 2)
+        plt.subplot(2, 2, 2)
         plt.pie(
             [detained_count, total_students - detained_count], 
             labels=['Detained', 'Not Detained'], 
@@ -601,6 +634,34 @@ def generate_performance_chart(request, document_id):
             colors=['#FF6B6B', '#4ECDC4']
         )
         plt.title('Detention Status')
+
+        # Subplot 3: Performance Summary
+        plt.subplot(2, 2, 3)
+        plt.axis('off')
+        summary_text = (
+            f"Total Students: {total_students}\n"
+            f"Successful Students: {total_successful_students}\n"
+            f"Mean % of Successful Students: {mean_percentage_successful:.2f}\n"
+            f"Academic Performance Index (API): {api:.2f}\n"
+            f"Average CGPA: {class_avg_cgpa:.2f}"
+        )
+        plt.text(0.5, 0.5, summary_text, 
+                 horizontalalignment='center', 
+                 verticalalignment='center', 
+                 fontsize=10, 
+                 bbox=dict(facecolor='white', alpha=0.7))
+        plt.title('Performance Summary')
+
+        # Subplot 4: Semester Performance
+        plt.subplot(2, 2, 4)
+        plt.axis('off')
+        semester_text = "Semester Averages:\n" + "\n".join([f"{sem}: {avg:.2f}" for sem, avg in semester_averages.items()])
+        plt.text(0.5, 0.5, semester_text, 
+                 horizontalalignment='center', 
+                 verticalalignment='center', 
+                 fontsize=10, 
+                 bbox=dict(facecolor='white', alpha=0.7))
+        plt.title('Semester Performance')
 
         # Save the plot
         plt.tight_layout()
@@ -610,18 +671,26 @@ def generate_performance_chart(request, document_id):
         chart_image = base64.b64encode(buffer.getvalue()).decode('utf8')
         plt.close() 
 
+        # Prepare chart data for saving
+        chart_data = {
+            'performance': performance,
+            'chart_image': chart_image,
+            'avg_cgpa': class_avg_cgpa,
+            'total_students': total_students,
+            'detained_count': detained_count,  # Match the field name in your model
+            'total_cgpa': total_cgpa
+        }
+
+        # Add semester averages dynamically
+        for sem_col, avg_value in semester_averages.items():
+            # Convert semester column name to a valid field name
+            field_name = f'avg_{sem_col.lower().replace("-", "_")}'
+            chart_data[field_name] = avg_value
+
         # Update or create PerformanceChart
         performance_chart, created = PerformanceChart.objects.update_or_create(
             performance=performance,
-            defaults={
-                'chart_image': chart_image,
-                'avg_cgpa': class_avg_cgpa,
-                'avg_sgpa_iii': avg_sgpa_iii,
-                'avg_sgpa_iv': avg_sgpa_iv,
-                'total_students': total_students,
-                'total_cgpa': total_cgpa,
-                'detained_count': detained_count
-            }
+            defaults=chart_data
         )
 
         messages.success(request, "Performance chart generated successfully!")
