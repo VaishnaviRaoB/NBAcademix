@@ -28,13 +28,18 @@ class StudentPerformance(models.Model):
         return f"{self.academic_year_in} Year - {self.academic_year}"
 
 class Document(models.Model):
-    document = models.FileField(upload_to='documents/')
-    original_filename = models.CharField(max_length=255, blank=True)  # New field
+    performance = models.ForeignKey(
+        StudentPerformance, 
+        related_name='documents', 
+        on_delete=models.CASCADE
+    )
+    document = models.FileField(upload_to='performance_documents/')
+    original_filename = models.CharField(max_length=255)
     uploaded_at = models.DateTimeField(auto_now_add=True)
-    performance = models.ForeignKey(StudentPerformance, related_name='documents', on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.original_filename or os.path.basename(self.document.name)
+        return self.original_filename
+    
 class StudentList(models.Model):
     batch_year = models.CharField(max_length=50)  # e.g., 2020-2024
     created_at = models.DateTimeField(auto_now_add=True)
@@ -66,3 +71,21 @@ class AchievementDocument(models.Model):
 
     def __str__(self):
         return self.original_filename or os.path.basename(self.document.name)
+    
+
+class PerformanceChart(models.Model):
+    performance = models.OneToOneField(
+        StudentPerformance, 
+        on_delete=models.CASCADE,
+        related_name='performance_chart'
+    )
+    chart_image = models.TextField(null=True, blank=True)  # Base64 encoded image
+    avg_cgpa = models.FloatField(null=True)
+    avg_sgpa_iii = models.FloatField(null=True)
+    avg_sgpa_iv = models.FloatField(null=True)
+    total_students = models.IntegerField(default=0)
+    total_cgpa = models.FloatField(null=True)
+    detained_count = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"Performance Chart - {self.performance.academic_year}"

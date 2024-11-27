@@ -6,10 +6,16 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import AuthenticationForm
-from .models import StudentPerformance, Document ,  UserProfile, StudentList, StudentDocument, AchievementDocument, Achievement
+from .models import StudentPerformance, Document ,  UserProfile, StudentList, StudentDocument, AchievementDocument, Achievement,PerformanceChart
 from django.http import HttpResponse
 from wsgiref.util import FileWrapper
-
+import base64
+import io
+import matplotlib
+matplotlib.use('Agg') 
+import matplotlib.pyplot as plt
+import pandas as pd
+import plotly.graph_objs as go
 from django.urls import reverse
 from django.http import HttpResponseRedirect
 import os
@@ -486,3 +492,155 @@ def delete_achievement_file(request, document_id):
         messages.success(request, "File deleted successfully")
         return redirect('achievement')
     return redirect('achievement')
+
+@login_required
+def generate_performance_chart(request, document_id):
+    try:
+        # Get the performance document
+        document = get_object_or_404(Document, id=document_id)
+        performance = document.performance
+
+        # Validate file extension
+        file_extension = os.path.splitext(document.document.path)[1].lower()
+        allowed_extensions = ['.xls', '.xlsx']
+        
+        if file_extension not in allowed_extensions:
+            messages.error(request, "Invalid file type. Please upload an Excel file.")
+            return redirect('student_performance')
+
+        # Read the Excel file with error handling
+        try:
+            df = pd.read_excel(document.document.path, engine='openpyxl')
+        except Exception as e:
+            messages.error(request, f"Error reading Excel file: {str(e)}")
+            return redirect('student_performance')
+
+        # Flexible column matching
+        def find_column(possible_names):
+            for name in possible_names:
+                matching_cols = [col for col in df.columns if name.lower() in col.lower()]
+                if matching_cols:
+                    return matching_cols[0]
+            return None
+
+        # Find columns flexibly
+        sl_no_col = find_column(['sl.no', 'slno', 'serial', 'serial no'])
+        usn_col = find_column(['usn', 'usr', 'user'])
+        name_col = find_column(['name', 'student name'])
+        sgpa_iii_col = find_column(['sgpa-iii', 'sgpa iii', 'sgpa 3'])
+        sgpa_iv_col = find_column(['sgpa-iv', 'sgpa iv', 'sgpa 4'])
+        cgpa_col = find_column(['cgpa', 'cpi'])
+        detained_col = find_column(['detained?', 'detained', 'detention'])
+
+        # Validate columns
+        required_columns = {
+            'SL.NO': sl_no_col,
+            'USN': usn_col,
+            'NAME': name_col,
+            'SGPA-III': sgpa_iii_col,
+            'SGPA-IV': sgpa_iv_col,
+            'CGPA': cgpa_col,
+            'DETAINED?': detained_col
+        }
+
+        # Check if all required columns are found
+        missing_columns = [key for key, value in required_columns.items() if value is None]
+        if missing_columns:
+            messages.error(request, f"Missing columns: {', '.join(missing_columns)}")
+            return redirect('student_performance')
+
+        # Rename columns to standard names
+        df = df.rename(columns={
+            sl_no_col: 'SL.NO',
+            usn_col: 'USN',
+            name_col: 'NAME',
+            sgpa_iii_col: 'SGPA-III',
+            sgpa_iv_col: 'SGPA-IV',
+            cgpa_col: 'CGPA',
+            detained_col: 'DETAINED?'
+        })
+
+        # Calculate total number of students
+        total_students = len(df)
+
+        # Calculate total and average CGPA
+        total_cgpa = df['CGPA'].sum()
+        class_avg_cgpa = total_cgpa / total_students
+
+        # Calculate semester-specific averages
+        avg_sgpa_iii = df['SGPA-III'].mean()
+        avg_sgpa_iv = df['SGPA-IV'].mean()
+
+        # Count detained students (case-insensitive)
+        detained_count = len(df[df['DETAINED?'].str.upper() == 'YES'])
+
+        # Create matplotlib figure
+        plt.figure(figsize=(12, 6))
+        plt.suptitle(f'Class Performance - {performance.academic_year}', fontsize=16)
+
+
+        # Subplot 1: Bar Chart - SGPA and CGPA Comparison
+        plt.subplot(1, 2, 1)
+        plt.bar(['Avg SGPA-III', 'Avg SGPA-IV', 'Avg CGPA'], 
+                [avg_sgpa_iii, avg_sgpa_iv, class_avg_cgpa], 
+                color=['maroon', 'navy', 'green'])
+        plt.title('Performance Metrics')
+        plt.ylabel('Score')
+        plt.ylim(0, 10)  # Assuming scores are out of 10
+        
+        # Add value labels on top of each bar
+        for i, v in enumerate([avg_sgpa_iii, avg_sgpa_iv, class_avg_cgpa]):
+            plt.text(i, v, f'{v:.2f}', ha='center', va='bottom', fontweight='bold')
+
+        # Subplot 2: Pie Chart - Detention Status
+        plt.subplot(1, 2, 2)
+        plt.pie(
+            [detained_count, total_students - detained_count], 
+            labels=['Detained', 'Not Detained'], 
+            autopct='%1.1f%%',
+            colors=['#FF6B6B', '#4ECDC4']
+        )
+        plt.title('Detention Status')
+
+        # Save the plot
+        plt.tight_layout()
+        buffer = BytesIO()
+        plt.savefig(buffer, format='png', dpi=300)
+        buffer.seek(0)
+        chart_image = base64.b64encode(buffer.getvalue()).decode('utf8')
+        plt.close() 
+
+        # Update or create PerformanceChart
+        performance_chart, created = PerformanceChart.objects.update_or_create(
+            performance=performance,
+            defaults={
+                'chart_image': chart_image,
+                'avg_cgpa': class_avg_cgpa,
+                'avg_sgpa_iii': avg_sgpa_iii,
+                'avg_sgpa_iv': avg_sgpa_iv,
+                'total_students': total_students,
+                'total_cgpa': total_cgpa,
+                'detained_count': detained_count
+            }
+        )
+
+        messages.success(request, "Performance chart generated successfully!")
+        return redirect('student_performance')
+
+    except Exception as e:
+        messages.error(request, f"Error generating chart: {str(e)}")
+        return redirect('student_performance')
+
+def download_performance_chart(request, performance_id):
+    performance = get_object_or_404(StudentPerformance, id=performance_id)
+    
+    if not hasattr(performance, 'performance_chart'):
+        messages.error(request, "No chart available for this performance record.")
+        return redirect('student_performance')
+
+    chart = performance.performance_chart
+    
+    # Create response
+    response = HttpResponse(base64.b64decode(chart.chart_image), content_type='image/png')
+    response['Content-Disposition'] = f'attachment; filename="performance_chart_{performance.academic_year}.png"'
+    return response
