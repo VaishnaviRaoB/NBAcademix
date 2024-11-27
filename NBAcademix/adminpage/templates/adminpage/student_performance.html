@@ -158,49 +158,53 @@
 
     <!-- Chart Modals (Existing chart modal code remains the same) -->
     {% for performance in performances %}
-        {% if performance.performance_chart and performance.performance_chart.chart_image %}
-        <div id="chart-modal-{{ performance.id }}" class="modal chart-modal">
-            <div class="modal-content chart-modal-content">
-                <div class="modal-header">
-                    <h3>Performance Chart: {{ performance.academic_year_in }} Year ({{ performance.academic_year }})</h3>
-                    <div class="modal-actions">
-                        <a href="{% url 'download_performance_chart' performance.id %}" class="btn chart-download-btn">
-                            <i class="fas fa-download"></i> Download Chart
-                        </a>
-                        <span class="close" onclick="closeChartModal('chart-modal-{{ performance.id }}')">&times;</span>
-                    </div>
+    {% if performance.performance_chart and performance.performance_chart.chart_image %}
+    <div id="chart-modal-{{ performance.id }}" class="modal chart-modal">
+        <div class="modal-content chart-modal-content">
+            <div class="modal-header">
+                <h3>Performance Chart: {{ performance.academic_year_in }} Year ({{ performance.academic_year }})</h3>
+                <div class="modal-actions">
+                    <a href="{% url 'download_performance_chart' performance.id %}" class="btn chart-download-btn">
+                        <i class="fas fa-download"></i> Download Chart
+                    </a>
+                    <span class="close" onclick="closeChartModal('chart-modal-{{ performance.id }}')">&times;</span>
                 </div>
-                <div class="modal-body chart-modal-body">
-                    <div class="chart-summary-content">
-                        <div class="chart-summary-stats">
-                            <table>
+            </div>
+            <div class="modal-body chart-modal-body">
+                <div class="chart-summary-content">
+                    <div class="chart-summary-stats">
+                        <table>
+                            {% if performance.performance_chart.semester_averages %}
+                                {% for sem, avg_sgpa in performance.performance_chart.semester_averages.items %}
                                 <tr>
-                                    <th>Avg SGPA-III</th>
-                                    <td>{{ performance.performance_chart.avg_sgpa_iii|floatformat:2 }}</td>
+                                    <th>Avg SGPA-{{ sem }}</th>
+                                    <td>{{ avg_sgpa|floatformat:2 }}</td>
                                 </tr>
-                                <tr>
-                                    <th>Avg SGPA-IV</th>
-                                    <td>{{ performance.performance_chart.avg_sgpa_iv|floatformat:2 }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Avg CGPA</th>
-                                    <td>{{ performance.performance_chart.avg_cgpa|floatformat:2 }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Detained Students</th>
-                                    <td>{{ performance.performance_chart.detained_count }}</td>
-                                </tr>
-                            </table>
-                        </div>
-                        <div class="chart-summary-image">
-                            <img src="data:image/png;base64,{{ performance.performance_chart.chart_image }}" alt="Performance Chart">
-                        </div>
+                                {% endfor %}
+                            {% endif %}
+                            <tr>
+                                <th>Avg CGPA</th>
+                                <td>{{ performance.performance_chart.avg_cgpa|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <th>Total Students</th>
+                                <td>{{ performance.performance_chart.total_students }}</td>
+                            </tr>
+                            <tr>
+                                <th>Detained Students</th>
+                                <td>{{ performance.performance_chart.detained_count }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="chart-summary-image">
+                        <img src="data:image/png;base64,{{ performance.performance_chart.chart_image }}" alt="Performance Chart">
                     </div>
                 </div>
             </div>
         </div>
-        {% endif %}
-    {% endfor %}
+    </div>
+    {% endif %}
+{% endfor %}
 </div>
 
 <style>

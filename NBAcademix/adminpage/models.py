@@ -75,7 +75,7 @@ class AchievementDocument(models.Model):
 
 class PerformanceChart(models.Model):
     performance = models.OneToOneField(
-        StudentPerformance, 
+        StudentPerformance,
         on_delete=models.CASCADE,
         related_name='performance_chart'
     )
@@ -86,13 +86,9 @@ class PerformanceChart(models.Model):
     total_students = models.IntegerField(default=0)
     total_cgpa = models.FloatField(null=True)
     detained_count = models.IntegerField(default=0)
-    
-    # Dynamic semester SGPA fields
-    avg_sgpa_iii = models.FloatField(null=True, blank=True)
-    avg_sgpa_iv = models.FloatField(null=True, blank=True)
-    avg_sgpa_v = models.FloatField(null=True, blank=True)
-    avg_sgpa_vi = models.FloatField(null=True, blank=True)
-    # Add more semesters as needed
-    
+
+    # Store semester-wise averages dynamically
+    semester_averages = models.JSONField(null=True, blank=True)
+
     def __str__(self):
         return f"Performance Chart - {self.performance.academic_year}"
