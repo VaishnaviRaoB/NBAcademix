@@ -7,6 +7,9 @@ from django.conf import settings
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import AuthenticationForm
 import re
+from django.dispatch import receiver
+from django.db.models import Count
+from django.db.models.signals import post_delete
 from .models import StudentPerformance, Document ,  UserProfile, StudentList, StudentDocument, AchievementDocument, Achievement,PerformanceChart
 from django.http import HttpResponse
 from wsgiref.util import FileWrapper
@@ -235,13 +238,28 @@ def student_performance_view(request):
     return render(request, 'adminpage/student_performance.html', context)
 
 @login_required
-def delete_performance(request, performance_id):
-    performance = get_object_or_404(StudentPerformance, id=performance_id)
-    if request.method == 'POST':
-        # This will also delete all related documents due to CASCADE
-        performance.delete()
-        messages.success(request, "Performance record deleted successfully")
-        return redirect('student_performance')
+def delete_performance(request, document_id):
+    document = get_object_or_404(Document, id=document_id)
+    performance = document.performance
+
+    # Store the performance ID before deletion
+    performance_id = performance.id
+
+    # Delete the document
+    document.delete()
+
+    # Check if any documents remain for this performance
+    remaining_documents = performance.documents.all()
+
+    if not remaining_documents:
+        # If no documents remain, delete the associated performance chart if it exists
+        try:
+            performance_chart = PerformanceChart.objects.get(performance=performance)
+            performance_chart.delete()
+        except PerformanceChart.DoesNotExist:
+            pass
+
+    messages.success(request, "Document deleted successfully.")
     return redirect('student_performance')
 
 
@@ -400,7 +418,7 @@ def delete_student_file(request, document_id):
         document.delete()
         messages.success(request, "File deleted successfully")
         return redirect('student_list')
-    return redirect('student_list')
+    return redirect('student_list')  
 @login_required
 def achievement_view(request):
     """Display and manage achievements."""
@@ -714,3 +732,18 @@ def download_performance_chart(request, performance_id):
     response = HttpResponse(base64.b64decode(chart.chart_image), content_type='image/png')
     response['Content-Disposition'] = f'attachment; filename="performance_chart_{performance.academic_year}.png"'
     return response
+
+@login_required
+@receiver(post_delete, sender=Document)
+def delete_performance_chart_if_no_documents(sender, instance, **kwargs):
+    performance = instance.performance
+    
+    # Check if any documents remain for this performance
+    document_count = performance.documents.count()
+    
+    if document_count == 0:
+        try:
+            performance_chart = PerformanceChart.objects.get(performance=performance)
+            performance_chart.delete()
+        except PerformanceChart.DoesNotExist:
+            pass
