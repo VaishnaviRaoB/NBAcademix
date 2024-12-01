@@ -37,9 +37,10 @@ from .forms import (
 
 def landing_page(request):
     """Handle the landing page with login functionality"""
+    # Explicitly clear any existing session
     if request.user.is_authenticated:
-        return redirect('homepage')
-        
+        logout(request)
+    
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
@@ -550,8 +551,12 @@ def generate_performance_chart(request, document_id):
             'SGPA-V', 'SGPA-VI', 'SGPA-VII', 'SGPA-VIII',
             'SGPA I', 'SGPA II', 'SGPA III', 'SGPA IV',
             'SGPA V', 'SGPA VI', 'SGPA VII', 'SGPA VIII',
-            'SGPA-1', 'SGPA-2', 'SGPA-3', 'SGPA-4',
-            'SGPA 1', 'SGPA 2', 'SGPA 3', 'SGPA 4'
+            'SGPA-1', 'SGPA-2', 'SGPA-3', 'SGPA-4','SGPA-5','SGPA-6','SGPA-7','SGPA-8',
+            'SGPA 1', 'SGPA 2', 'SGPA 3', 'SGPA 4','SGPA 5','SGPA 6','SGPA 7','SGPA 8',
+            'I SEM SGPA' , 'II SEM SGPA' , 'III SEM SGPA' , 'IV SEM SGPA' , 'V SEM SGPA' , 'VI SEM SGPA' , 'VII SEM SGPA' , 'VIII SEM SGPA' ,
+            'I-SEM SGPA' , 'II-SEM SGPA' , 'III-SEM SGPA' , 'IV-SEM SGPA' , 'V-SEM SGPA' , 'VI-SEM SGPA' , 'VII-SEM SGPA' , 'VIII-SEM SGPA' ,
+            'Sem 1 SGPA', 'Sem 2 SGPA', 'Sem 3 SGPA' , 'Sem 4 SGPA','Sem 5 SGPA','Sem 6 SGPA','Sem 7 SGPA','Sem 8 SGPA',
+            '1st SEM SPGA','2nd SEM SPGA','3rd SEM SPGA','4th SEM SPGA','5th SEM SPGA','6th SEM SPGA','7th SEM SPGA','8th SEM SPGA',
         ]
         
         # Find which semester columns actually exist in the dataframe
