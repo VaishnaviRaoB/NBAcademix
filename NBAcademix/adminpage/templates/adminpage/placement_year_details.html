@@ -1,0 +1,136 @@
+{% extends 'adminpage/base.html' %}
+{% block content %}
+<style>
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 30px;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+        color: #800000;
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 32px;
+        font-weight: bold;
+    }
+
+    .btn {
+        display: inline-block;
+        background-color: #800000;
+        color: #fff;
+        padding: 12px 24px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-size: 16px;
+        font-weight: bold;
+        margin-bottom: 30px;
+        transition: background-color 0.3s ease;
+        margin-right: 15px;
+    }
+
+    .btn:hover {
+        background-color: #600000;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 30px;
+    }
+
+    .table thead th {
+        background-color: #800000;
+        color: #fff;
+        text-align: left;
+        padding: 12px;
+        font-size: 18px;
+    }
+
+    .table tbody tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f9e5e5;
+    }
+
+    .table td, .table th {
+        border: 1px solid #ddd;
+        padding: 12px;
+        font-size: 16px;
+    }
+
+    .table td {
+        color: #333;
+    }
+
+    p {
+        text-align: center;
+        color: #888;
+        font-size: 18px;
+        margin-top: 30px;
+    }
+
+    .offer-letter-btn {
+        background-color: #4CAF50;
+    }
+
+    .offer-letter-btn:hover {
+        background-color: #45a049;
+    }
+</style>
+<div class="container">
+    <h2>Placement Details for {{ passout_year.year }}</h2>
+<div>
+    <a href="{% url 'add_placement_details' passout_year.id %}" class="btn">
+        <i class="fas fa-plus"></i> Add Placement Details
+    </a>
+</div>
+
+{% if placement_details %}
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>USN</th>
+            <th>Branch</th>
+            <th>Company Name</th>
+            <th>CTC</th>
+            <th>Offer Letter</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for detail in placement_details %}
+        <tr>
+            <td>{{ detail.name }}</td>
+            <td>{{ detail.usn }}</td>
+            <td>{{ detail.branch }}</td>
+            <td>{{ detail.company_name }}</td>
+            <td>{{ detail.ctc }}</td>
+            <td style="display: flex; gap: 10px;">
+                <form method="post" action="{% url 'upload_offer_letter' detail.id %}" enctype="multipart/form-data" style="width: 100%;">
+                    {% csrf_token %}
+                    <input type="file" name="offer_letter" accept=".pdf,.doc,.docx" style="display: none;" id="offer_letter_{{ detail.id }}" onchange="this.form.submit()">
+                    <button type="button" class="btn offer-letter-btn" onclick="document.getElementById('offer_letter_{{ detail.id }}').click()" style="width: 100%; margin: 0;">
+                        <i class="fas fa-upload"></i> Upload Offer Letter
+                    </button>
+                </form>
+                {% if detail.offer_letter %}
+                    <a href="{{ detail.offer_letter.url }}" target="_blank" class="btn" style="width: 100%; margin: 0;">
+                        <i class="fas fa-file-alt"></i> View Offer Letter
+                    </a>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No placement details added yet.</p>
+{% endif %}
+</div>
+{% endblock %}

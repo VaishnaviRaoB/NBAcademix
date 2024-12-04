@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 from django.contrib.auth.models import User
-from .models import UserProfile
+from .models import UserProfile,PassoutYear, PlacementDetails
 from django.contrib.auth.forms import PasswordChangeForm
 
 class SignupForm(UserCreationForm):
@@ -69,4 +69,11 @@ class CustomPasswordChangeForm(forms.Form):
             self.user.save()
         return self.user
     
-
+class PassoutYearForm(forms.ModelForm):
+    class Meta:
+        model = PassoutYear
+        fields = ['year']
+class PlacementDetailsForm(forms.ModelForm):
+    class Meta:
+        model = PlacementDetails
+        fields = ['name', 'usn', 'branch', 'company_name', 'ctc']

@@ -10,7 +10,7 @@ import re
 from django.dispatch import receiver
 from django.db.models import Count
 from django.db.models.signals import post_delete
-from .models import StudentPerformance, Document ,  UserProfile, StudentList, StudentDocument, AchievementDocument, Achievement,PerformanceChart
+from .models import StudentPerformance, Document ,  UserProfile, StudentList, StudentDocument, AchievementDocument, Achievement,PerformanceChart,PassoutYear,PlacementDetails
 from django.http import HttpResponse
 from wsgiref.util import FileWrapper
 import base64
@@ -30,7 +30,9 @@ from .forms import (
     UserUpdateForm, 
     UserProfileUpdateForm, 
     CustomPasswordChangeForm,
-    
+   PassoutYearForm,
+   PlacementDetailsForm
+   
 )
 
 
@@ -752,3 +754,64 @@ def delete_performance_chart_if_no_documents(sender, instance, **kwargs):
             performance_chart.delete()
         except PerformanceChart.DoesNotExist:
             pass
+def placement_home(request):
+    if request.method == 'POST':
+        form = PassoutYearForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('placement_year_details', form.instance.id)
+    else:
+        form = PassoutYearForm()
+
+    passout_years = PassoutYear.objects.all()
+    context = {
+        'form': form,
+        'passout_years': passout_years
+    }
+    return render(request, 'adminpage/placement_home.html', context)
+def placement_year_details(request, year_id):
+    passout_year = get_object_or_404(PassoutYear, id=year_id)
+    placement_details = PlacementDetails.objects.filter(passout_year=passout_year)
+    search_query = request.GET.get('search', '')
+    if search_query:
+        placement_details = placement_details.filter(
+            Q(name__icontains=search_query) | 
+            Q(usn__icontains=search_query) | 
+            Q(company_name__icontains=search_query)
+        )
+    context = {
+        'passout_year': passout_year,
+        'placement_details': placement_details
+    }
+    return render(request, 'adminpage/placement_year_details.html', context)   
+def add_placement_details(request, year_id):
+    passout_year = get_object_or_404(PassoutYear, id=year_id)
+    if request.method == 'POST':
+        form = PlacementDetailsForm(request.POST)
+        if form.is_valid():
+            placement_details = form.save(commit=False)
+            placement_details.passout_year = passout_year
+            placement_details.save()
+            return redirect('placement_year_details', year_id)
+    else:
+        form = PlacementDetailsForm()
+
+    context = {
+        'form': form,
+        'passout_year': passout_year
+    }
+    return render(request, 'adminpage/add_placement_details.html', context)
+def upload_offer_letter(request, placement_id):
+    if request.method == 'POST':
+        placement_detail = get_object_or_404(PlacementDetails, id=placement_id)
+        if 'offer_letter' in request.FILES:
+            placement_detail.offer_letter = request.FILES['offer_letter']
+            placement_detail.save()
+            messages.success(request, 'Offer letter uploaded successfully.')
+        return redirect('placement_year_details', year_id=placement_detail.passout_year.id)
+def delete_passout_year(request, year_id):
+    year = get_object_or_404(PassoutYear, id=year_id)
+    if request.method == 'POST':
+        year.delete()
+        messages.success(request, f'Passout Year {year.year} deleted successfully.')
+    return redirect('placement_home')

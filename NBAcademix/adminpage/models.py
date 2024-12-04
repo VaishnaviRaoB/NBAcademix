@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 import os
+from django.core.validators import FileExtensionValidator
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
@@ -92,3 +93,22 @@ class PerformanceChart(models.Model):
 
     def __str__(self):
         return f"Performance Chart - {self.performance.academic_year}"
+
+
+class PassoutYear(models.Model):
+    year = models.PositiveIntegerField(unique=True)
+
+    def __str__(self):
+        return str(self.year)
+
+class PlacementDetails(models.Model):
+    name = models.CharField(max_length=100)
+    usn = models.CharField(max_length=20)
+    branch = models.CharField(max_length=50)
+    company_name = models.CharField(max_length=100)
+    ctc = models.DecimalField(max_digits=10, decimal_places=2)
+    other_details = models.TextField(blank=True, null=True)
+    passout_year = models.ForeignKey(PassoutYear, on_delete=models.CASCADE, related_name='placement_details')
+    offer_letter = models.FileField(upload_to='offer_letters/', null=True, blank=True)
+    def __str__(self):
+        return f"{self.name} - {self.company_name}"

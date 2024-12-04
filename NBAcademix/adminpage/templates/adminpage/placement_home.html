@@ -1,0 +1,181 @@
+{% extends 'adminpage/base.html' %}
+{% block content %}
+<style>
+    .placement-container {
+        max-width: 900px;
+        margin: 2rem auto; /* Increased top and bottom margin */
+        padding: 2.5rem; /* Slightly increased padding */
+        background-color: #ffffff;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1); /* Slightly enhanced shadow */
+        border-radius: 10px; /* Slightly larger border radius */
+    }
+
+    .placement-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+        color: #2c3e50;
+        font-size: 2.5rem; /* Increased font size */
+        font-weight: 700;
+    }
+
+    .placement-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2.5rem;
+    }
+
+    .card {
+        background-color: #f8f9fa;
+        border: 1px solid #e2e6ea;
+        border-radius: 10px;
+        padding: 2rem; /* Increased padding */
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    .card-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        color: #2c3e50;
+        font-weight: 600;
+        font-size: 1.5rem; /* Increased font size */
+        border-bottom: 3px solid #3498db;
+        padding-bottom: 0.75rem;
+    }
+
+    .batch-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .batch-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffffff;
+    border: 1px solid #e2e6ea;
+    border-radius: 6px;
+    padding: 1.25rem; /* Increased padding */
+    font-size: 1.2rem; /* Slightly larger font */
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Added subtle shadow */
+}
+
+.batch-link {
+    color: #2c3e50;
+    text-decoration: none;
+    font-weight: 600;
+    flex-grow: 1;
+    font-size: 1.1rem; /* Increased font size */
+    letter-spacing: 0.5px; /* Optional: adds a bit of spacing between letters */
+}
+
+.batch-item:hover {
+    background-color: #f1f3f5;
+    transform: translateX(5px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Enhanced shadow on hover */
+}
+
+    .delete-btn {
+        background-color: #e74c3c;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 0.35rem 0.75rem;
+        margin-left: 0.5rem;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: background-color 0.3s ease;
+    }
+
+    .add-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 1rem;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+    }
+
+    .submit-btn {
+        font-size: 1.1rem;
+        padding: 0.75rem 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .placement-container {
+            margin: 1rem;
+            padding: 1.5rem;
+        }
+
+        .placement-content {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .card-header {
+            font-size: 1.3rem;
+        }
+
+        .batch-item {
+            font-size: 1rem;
+        }
+    }
+</style>
+
+<div class="placement-container">
+    <h1 class="placement-header">Placement Tracking System</h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} text-center">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="placement-content">
+        <div class="card">
+            <h3 class="card-header">Add Passout Year</h3>
+            <form method="post" class="add-form">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div>
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="text-danger">{{ field.errors }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                <button type="submit" class="submit-btn">Add Passout Year</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3 class="card-header">Existing Passout Years</h3>
+            <div class="batch-list">
+                {% for year in passout_years %}
+                    <div class="batch-item">
+                        <a href="{% url 'placement_year_details' year.id %}" class="batch-link">
+                            {{ year.year }}
+                        </a>
+                        <form method="post" action="{% url 'delete_passout_year' year.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this passout year?')">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+                {% empty %}
+                    <p class="text-center text-muted">No passout years added yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
