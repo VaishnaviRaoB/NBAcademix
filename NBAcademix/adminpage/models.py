@@ -112,3 +112,19 @@ class PlacementDetails(models.Model):
     offer_letter = models.FileField(upload_to='offer_letters/', null=True, blank=True)
     def __str__(self):
         return f"{self.name} - {self.company_name}"
+    
+class HigherStudy(models.Model):
+    batch_year = models.CharField(max_length=9)  # e.g., 2013-2020
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Batch - {self.batch_year}"
+    
+class HigherStudyDocument(models.Model):
+    document = models.FileField(upload_to='higher_study_documents/')
+    original_filename = models.CharField(max_length=255, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    higher_study = models.ForeignKey(HigherStudy, related_name='documents', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.original_filename or os.path.basename(self.document.name)

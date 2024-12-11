@@ -10,7 +10,7 @@ import re
 from django.dispatch import receiver
 from django.db.models import Count
 from django.db.models.signals import post_delete
-from .models import StudentPerformance, Document ,  UserProfile, StudentList, StudentDocument, AchievementDocument, Achievement,PerformanceChart,PassoutYear,PlacementDetails
+from .models import StudentPerformance, Document ,  UserProfile, StudentList, StudentDocument, AchievementDocument, Achievement,PerformanceChart,PassoutYear,PlacementDetails,HigherStudyDocument,HigherStudy
 from django.http import HttpResponse
 from wsgiref.util import FileWrapper
 import base64
@@ -842,3 +842,95 @@ def delete_placement_details(request, placement_id):
     
     return redirect('placement_year_details', year_id=passout_year_id)
 
+@login_required
+def higher_studies_view(request):
+    """Display and manage higher studies records."""
+    higher_studies = HigherStudy.objects.all().order_by('-created_at')
+    
+    if request.method == 'POST':
+        if 'batch_year' in request.POST:
+            batch_year = request.POST.get('batch_year')
+            
+            if batch_year:
+                try:
+                    higher_study = HigherStudy.objects.create(
+                        batch_year=batch_year
+                    )
+                    messages.success(request, f'Higher Study record for batch "{batch_year}" added successfully.')
+                except Exception as e:
+                    messages.error(request, f'Error adding higher study record: {str(e)}')
+            else:
+                messages.error(request, 'Please provide batch year.')
+        return redirect('higher_studies')
+    
+    context = {
+        'higher_studies': higher_studies,
+    }
+    return render(request, 'adminpage/higher_studies.html', context)
+
+@login_required
+def delete_higher_study(request, higher_study_id):
+    higher_study = get_object_or_404(HigherStudy, id=higher_study_id)
+    if request.method == 'POST':
+        higher_study.delete()
+        messages.success(request, "Higher Study record deleted successfully")
+        return redirect('higher_studies')
+    return redirect('higher_studies')
+
+@login_required
+def upload_higher_study_file(request, higher_study_id):
+    try:
+        higher_study = get_object_or_404(HigherStudy, id=higher_study_id)
+        
+        if request.method == 'POST' and request.FILES.get('document'):
+            uploaded_file = request.FILES['document']
+            
+            document = HigherStudyDocument(
+                higher_study=higher_study,
+                document=uploaded_file,
+                original_filename=uploaded_file.name
+            )
+            document.save()
+            
+            messages.success(request, f'File "{uploaded_file.name}" uploaded successfully')
+            return redirect('higher_studies')
+            
+    except Exception as e:
+        messages.error(request, f'Error uploading file: {str(e)}')
+        
+    return redirect('higher_studies')
+
+@login_required
+def download_higher_study_files(request, higher_study_id):
+    try:
+        higher_study = get_object_or_404(HigherStudy, id=higher_study_id)
+        documents = higher_study.documents.all()
+
+        if not documents:
+            messages.warning(request, 'No documents available to download.')
+            return redirect('higher_studies')
+
+        zip_buffer = BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            for document in documents:
+                file_name = os.path.basename(document.document.name)
+                zip_file.writestr(file_name, document.document.read())
+
+        response = HttpResponse(zip_buffer.getvalue(), content_type='application/zip')
+        response['Content-Disposition'] = f'attachment; filename={higher_study.batch_year}_documents.zip'
+
+        return response
+
+    except Exception as e:
+        messages.error(request, f'Error downloading files: {str(e)}')
+        return redirect('higher_studies')
+
+@login_required
+def delete_higher_study_file(request, document_id):
+    document = get_object_or_404(HigherStudyDocument, id=document_id)
+    if request.method == 'POST':
+        document.document.delete()
+        document.delete()
+        messages.success(request, "File deleted successfully")
+        return redirect('higher_studies')
+    return redirect('higher_studies')
