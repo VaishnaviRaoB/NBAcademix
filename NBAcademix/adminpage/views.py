@@ -815,3 +815,30 @@ def delete_passout_year(request, year_id):
         year.delete()
         messages.success(request, f'Passout Year {year.year} deleted successfully.')
     return redirect('placement_home')
+
+def update_placement_details(request, placement_id):
+    placement_detail = get_object_or_404(PlacementDetails, id=placement_id)
+    if request.method == 'POST':
+        form = PlacementDetailsForm(request.POST, instance=placement_detail)
+        if form.is_valid():
+            form.save()
+            return redirect('placement_year_details', year_id=placement_detail.passout_year.id)
+    else:
+        form = PlacementDetailsForm(instance=placement_detail)
+    
+    context = {
+        'form': form,
+        'passout_year': placement_detail.passout_year
+    }
+    return render(request, 'adminpage/add_placement_details.html', context)
+
+def delete_placement_details(request, placement_id):
+    placement_detail = get_object_or_404(PlacementDetails, id=placement_id)
+    passout_year_id = placement_detail.passout_year.id
+    
+    if request.method == 'POST':
+        placement_detail.delete()
+        messages.success(request, 'Placement details deleted successfully.')
+    
+    return redirect('placement_year_details', year_id=passout_year_id)
+
