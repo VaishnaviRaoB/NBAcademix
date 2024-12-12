@@ -104,7 +104,6 @@ class PassoutYear(models.Model):
 class PlacementDetails(models.Model):
     name = models.CharField(max_length=100)
     usn = models.CharField(max_length=20)
-    branch = models.CharField(max_length=50)
     company_name = models.CharField(max_length=100)
     ctc = models.DecimalField(max_digits=10, decimal_places=2)
     other_details = models.TextField(blank=True, null=True)

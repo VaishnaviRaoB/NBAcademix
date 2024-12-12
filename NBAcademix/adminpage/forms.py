@@ -76,4 +76,4 @@ class PassoutYearForm(forms.ModelForm):
 class PlacementDetailsForm(forms.ModelForm):
     class Meta:
         model = PlacementDetails
-        fields = ['name', 'usn', 'branch', 'company_name', 'ctc']
+        fields = ['name', 'usn', 'company_name', 'ctc']

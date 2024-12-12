@@ -1,6 +1,7 @@
 {% extends 'adminpage/base.html' %}
 {% block content %}
 <style>
+    /* Container Styling */
     .container {
         max-width: 1400px;
         margin: 0 auto;
@@ -10,6 +11,7 @@
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
 
+    /* Heading Styling */
     h2 {
         color: #800000;
         text-align: center;
@@ -18,9 +20,9 @@
         font-weight: bold;
     }
 
+    /* Button Base Styling */
     .btn {
         display: inline-block;
-        background-color: #800000;
         color: #fff;
         padding: 12px 24px;
         border-radius: 5px;
@@ -30,12 +32,20 @@
         margin-bottom: 30px;
         transition: background-color 0.3s ease;
         margin-right: 15px;
+        cursor: pointer;
+        border: none;
     }
 
-    .btn:hover {
+    /* Add Placement Details Button */
+    .add-details-btn {
+        background-color: #800000;
+    }
+
+    .add-details-btn:hover {
         background-color: #600000;
     }
 
+    /* Table Styling */
     .table {
         width: 100%;
         border-collapse: collapse;
@@ -66,118 +76,179 @@
 
     .table td {
         color: #333;
+        vertical-align: middle;
     }
 
-    p {
+    /* Offer Letter Upload Styling */
+    .offer-letter-section {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .upload-btn {
+        background-color: #4CAF50;
+        margin: 0;
+    }
+
+    .upload-btn:hover {
+        background-color: #45a049;
+    }
+
+    /* Dropdown Button Styling */
+    .dropdown-container {
+        position: relative;
+        display: inline-block;
+    }
+
+    .dropdown-btn {
+        background-color: #007bff;
+        position: relative;
+        z-index: 1;
+        margin: 0;
+    }
+
+    .dropdown-btn:hover {
+        background-color: #0056b3;
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: #f9f9f9;
+        min-width: 160px;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+        z-index: 2;
+        border-radius: 4px;
+        overflow: hidden;
+        left: 0;
+        top: 100%;
+    }
+
+    .dropdown-container:hover .dropdown-content {
+        display: block;
+    }
+
+    .dropdown-content a {
+        color: #333;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .dropdown-content a:hover {
+        background-color: #f1f1f1;
+    }
+
+    /* Action Buttons Styling */
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .update-btn {
+        background-color: #4CAF50;
+        width: 100%;
+    }
+
+    .delete-btn {
+        background-color: #f44336;
+        width: 100%;
+    }
+
+    .update-btn:hover {
+        background-color: #45a049;
+    }
+
+    .delete-btn:hover {
+        background-color: #d32f2f;
+    }
+
+    /* No Details Message */
+    .no-details-message {
         text-align: center;
         color: #888;
         font-size: 18px;
         margin-top: 30px;
     }
-
-    .offer-letter-btn {
-        background-color: #4CAF50;
-    }
-
-    .offer-letter-btn:hover {
-        background-color: #45a049;
-    }
-
-    .action-btn {
-        display: inline-block;
-        padding: 8px 16px;
-        margin: 4px;
-        border-radius: 4px;
-        text-decoration: none;
-        font-size: 14px;
-        text-align: center;
-    }
-
-    .update-btn {
-        background-color: #007bff;
-        color: white;
-    }
-
-    .update-btn:hover {
-        background-color: #0056b3;
-    }
-
-    .delete-btn {
-        background-color: #dc3545;
-        color: white;
-    }
-
-    .delete-btn:hover {
-        background-color: #a71d2a;
-    }
-
-    .action-cell {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
 </style>
+
 <div class="container">
     <h2>Placement Details for {{ passout_year.year }}</h2>
-<div>
-    <a href="{% url 'add_placement_details' passout_year.id %}" class="btn">
-        <i class="fas fa-plus"></i> Add Placement Details
-    </a>
-</div>
-{% if placement_details %}
-<table class="table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>USN</th>
-            <th>Branch</th>
-            <th>Company Name</th>
-            <th>CTC</th>
-            <th>Offer Letter</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for detail in placement_details %}
-        <tr>
-            <td>{{ detail.name }}</td>
-            <td>{{ detail.usn }}</td>
-            <td>{{ detail.branch }}</td>
-            <td>{{ detail.company_name }}</td>
-            <td>{{ detail.ctc }}</td>
-            <td style="display: flex; gap: 10px;">
-                <form method="post" action="{% url 'upload_offer_letter' detail.id %}" enctype="multipart/form-data" style="width: 100%;">
-                    {% csrf_token %}
-                    <input type="file" name="offer_letter" accept=".pdf,.doc,.docx" style="display: none;" id="offer_letter_{{ detail.id }}" onchange="this.form.submit()">
-                    <button type="button" class="btn offer-letter-btn" onclick="document.getElementById('offer_letter_{{ detail.id }}').click()" style="width: 100%; margin: 0;">
-                        <i class="fas fa-upload"></i> Upload Offer Letter
-                    </button>
-                </form>
-                {% if detail.offer_letter %}
-    <a href="{{ detail.offer_letter.url }}" target="_blank" class="btn btn-primary">View Offer Letter</a>
-{% else %}
-    <span class="text-muted">No offer letter available</span>
-{% endif %}
-            </td>
-            <td>
-                <div style="display: flex; gap: 10px;">
-                    <a href="{% url 'update_placement_details' detail.id %}" class="btn" style="background-color: #4CAF50; width: 100%;">
-                        <i class="fas fa-edit"></i> Update
-                    </a>
-                    <form method="post" action="{% url 'delete_placement_details' detail.id %}" style="width: 100%;">
-                        {% csrf_token %}
-                        <button type="submit" class="btn" style="background-color: #f44336; width: 100%;" onclick="return confirm('Are you sure you want to delete this placement detail?');">
-                            <i class="fas fa-trash"></i> Delete
-                        </button>
-                    </form>
-                </div>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% else %}
-<p>No placement details added yet.</p>
-{% endif %}
+    
+    <div>
+        <a href="{% url 'add_placement_details' passout_year.id %}" class="btn add-details-btn">
+            <i class="fas fa-plus"></i> Add Placement Details
+        </a>
+    </div>
+    
+    {% if placement_details %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>USN</th>
+                <th>Company Name</th>
+                <th>CTC</th>
+                <th>Offer Letter</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for detail in placement_details %}
+            <tr>
+                <td>{{ detail.name }}</td>
+                <td>{{ detail.usn }}</td>
+                <td>{{ detail.company_name }}</td>
+                <td>{{ detail.ctc }}</td>
+                <td>
+                    <div class="offer-letter-section">
+                        <form method="post" action="{% url 'upload_offer_letter' detail.id %}" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <input type="file" name="offer_letter" accept=".pdf,.doc,.docx" style="display: none;" id="offer_letter_{{ detail.id }}" onchange="this.form.submit()">
+                            <button type="button" class="btn upload-btn" onclick="document.getElementById('offer_letter_{{ detail.id }}').click()">
+                                <i class="fas fa-upload"></i> Upload
+                            </button>
+                        </form>
+                        
+                        {% if detail.offer_letter %}
+                        <div class="dropdown-container">
+                            <button class="btn dropdown-btn">
+                                <i class="fas fa-file-alt"></i> Offer Letter
+                            </button>
+                            <div class="dropdown-content">
+                                <a href="{{ detail.offer_letter.url }}" target="_blank">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                <a href="{{ detail.offer_letter.url }}" download="offer_letter.pdf">
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <a href="{% url 'update_placement_details' detail.id %}" class="btn update-btn">
+                            <i class="fas fa-edit"></i> Update
+                        </a>
+                        <form method="post" action="{% url 'delete_placement_details' detail.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn delete-btn" onclick="return confirm('Are you sure you want to delete this placement detail?');">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="no-details-message">No placement details added yet.</p>
+    {% endif %}
 </div>
 {% endblock %}
