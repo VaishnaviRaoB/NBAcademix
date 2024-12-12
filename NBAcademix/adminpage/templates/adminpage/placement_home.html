@@ -3,18 +3,18 @@
 <style>
     .placement-container {
         max-width: 900px;
-        margin: 2rem auto; /* Increased top and bottom margin */
-        padding: 2.5rem; /* Slightly increased padding */
+        margin: 2rem auto;
+        padding: 2.5rem;
         background-color: #ffffff;
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1); /* Slightly enhanced shadow */
-        border-radius: 10px; /* Slightly larger border radius */
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
     }
 
     .placement-header {
         text-align: center;
         margin-bottom: 2.5rem;
         color: #2c3e50;
-        font-size: 2.5rem; /* Increased font size */
+        font-size: 2.5rem;
         font-weight: 700;
     }
 
@@ -28,7 +28,7 @@
         background-color: #f8f9fa;
         border: 1px solid #e2e6ea;
         border-radius: 10px;
-        padding: 2rem; /* Increased padding */
+        padding: 2rem;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
     }
 
@@ -37,7 +37,7 @@
         margin-bottom: 2rem;
         color: #2c3e50;
         font-weight: 600;
-        font-size: 1.5rem; /* Increased font size */
+        font-size: 1.5rem;
         border-bottom: 3px solid #3498db;
         padding-bottom: 0.75rem;
     }
@@ -47,33 +47,34 @@
         flex-direction: column;
         gap: 1rem;
     }
+
     .batch-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #ffffff;
-    border: 1px solid #e2e6ea;
-    border-radius: 6px;
-    padding: 1.25rem; /* Increased padding */
-    font-size: 1.2rem; /* Slightly larger font */
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Added subtle shadow */
-}
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #ffffff;
+        border: 1px solid #e2e6ea;
+        border-radius: 6px;
+        padding: 1.25rem;
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
 
-.batch-link {
-    color: #2c3e50;
-    text-decoration: none;
-    font-weight: 600;
-    flex-grow: 1;
-    font-size: 1.1rem; /* Increased font size */
-    letter-spacing: 0.5px; /* Optional: adds a bit of spacing between letters */
-}
+    .batch-link {
+        color: #2c3e50;
+        text-decoration: none;
+        font-weight: 600;
+        flex-grow: 1;
+        font-size: 1.1rem;
+        letter-spacing: 0.5px;
+    }
 
-.batch-item:hover {
-    background-color: #f1f3f5;
-    transform: translateX(5px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Enhanced shadow on hover */
-}
+    .batch-item:hover {
+        background-color: #f1f3f5;
+        transform: translateX(5px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
 
     .delete-btn {
         background-color: #e74c3c;
@@ -104,6 +105,38 @@
     .submit-btn {
         font-size: 1.1rem;
         padding: 0.75rem 1.5rem;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .submit-btn:hover {
+        background-color: #2980b9;
+    }
+
+    .graph-btn {
+        font-size: 1.1rem;
+        padding: 0.75rem 1.5rem;
+        background-color: #2ecc71;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        margin-top: 1rem;
+        display: inline-block;
+    }
+
+    .graph-btn:hover {
+        background-color: #27ae60;
+    }
+
+    .btn-container {
+        text-align: center;
+        margin-top: 2rem;
     }
 
     @media (max-width: 768px) {
@@ -124,136 +157,62 @@
         .batch-item {
             font-size: 1rem;
         }
-        .analysis-options {
-            flex-direction: column;
-        }
     }
-
-    .analysis-btn {
-        width: 100%;
-        background-color: #3498db;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        padding: 0.75rem 1.5rem;
-        font-size: 1.1rem;
-        cursor: pointer;
-        transition: background-color 0.3s ease, transform 0.2s ease;
-        margin-top: 1rem;
-    }
-
-    .analysis-btn:hover {
-        background-color: #2980b9;
-        transform: scale(1.02);
-    }
-
-    .analysis-options {
-        display: none;
-        margin-top: 1rem;
-        text-align: center;
-        gap: 1rem;
-    }
-
-    .analysis-option-btn {
-        background-color: #2ecc71;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        padding: 0.5rem 1rem;
-        font-size: 1rem;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-    }
-
-    .analysis-option-btn:hover {
-        background-color: #27ae60;
-    }
-
 </style>
 
 <div class="placement-container">
     <h1 class="placement-header">Placement Tracking System</h1>
 
     {% if messages %}
-    {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} text-center">
-            {{ message }}
-        </div>
-    {% endfor %}
-{% endif %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} text-center">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
 
-<div class="placement-content">
-    <!-- Previous two cards remain the same -->
-    <div class="card">
-        <h3 class="card-header">Add Passout Year</h3>
-        <form method="post" class="add-form">
-            {% csrf_token %}
-            {% for field in form %}
-                <div>
-                    {{ field.label_tag }}
-                    {{ field }}
-                    {% if field.errors %}
-                        <div class="text-danger">{{ field.errors }}</div>
-                    {% endif %}
-                </div>
-            {% endfor %}
-            <button type="submit" class="submit-btn">Add Passout Year</button>
-        </form>
+    <div class="placement-content">
+        <div class="card">
+            <h3 class="card-header">Add Passout Year</h3>
+            <form method="post" class="add-form">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div>
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="text-danger">{{ field.errors }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                <button type="submit" class="submit-btn">Add Passout Year</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3 class="card-header">Existing Passout Years</h3>
+            <div class="batch-list">
+                {% for year in passout_years %}
+                    <div class="batch-item">
+                        <a href="{% url 'placement_year_details' year.id %}" class="batch-link">
+                            {{ year.year }}
+                        </a>
+                        <form method="post" action="{% url 'delete_passout_year' year.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this passout year?')">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+                {% empty %}
+                    <p class="text-center text-muted">No passout years added yet.</p>
+                {% endfor %}
+            </div>
+        </div>
     </div>
 
-    <div class="card">
-        <h3 class="card-header">Existing Passout Years</h3>
-        <div class="batch-list">
-            {% for year in passout_years %}
-                <div class="batch-item">
-                    <a href="{% url 'placement_year_details' year.id %}" class="batch-link">
-                        {{ year.year }}
-                    </a>
-                    <form method="post" action="{% url 'delete_passout_year' year.id %}" style="display: inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this passout year?')">
-                            Delete
-                        </button>
-                    </form>
-                </div>
-            {% empty %}
-                <p class="text-center text-muted">No passout years added yet.</p>
-            {% endfor %}
-        </div>
-    </div>
-
-    <!-- New Placement Analysis Card -->
-    <div class="card">
-        <h3 class="card-header">Placement Analysis</h3>
-        <button id="generateAnalysisBtn" class="analysis-btn">Generate Analysis</button>
-        
-        <div id="analysisOptions" class="analysis-options">
-            <button id="viewAnalysisBtn" class="analysis-option-btn">View Analysis</button>
-            <button id="downloadAnalysisBtn" class="analysis-option-btn">Download Analysis</button>
-        </div>
+    <div class="btn-container">
+        <a href="{% url 'generate_student_graph' %}" class="graph-btn">Generate Student Count Graph</a>
     </div>
 </div>
-</div>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const generateBtn = document.getElementById('generateAnalysisBtn');
-        const analysisOptions = document.getElementById('analysisOptions');
-        const viewBtn = document.getElementById('viewAnalysisBtn');
-        const downloadBtn = document.getElementById('downloadAnalysisBtn');
-
-        generateBtn.addEventListener('click', function() {
-            analysisOptions.style.display = 'flex';
-        });
-
-        viewBtn.addEventListener('click', function() {
-            // Add logic to view analysis (e.g., open a modal or navigate to a new page)
-            alert('View Analysis functionality to be implemented');
-        });
-
-        downloadBtn.addEventListener('click', function() {
-            // Add logic to download analysis
-            alert('Download Analysis functionality to be implemented');
-        });
-    });
-</script>
 {% endblock %}

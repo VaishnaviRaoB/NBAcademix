@@ -15,6 +15,7 @@ from django.http import HttpResponse
 from wsgiref.util import FileWrapper
 import base64
 import io
+import numpy as np
 import matplotlib
 matplotlib.use('Agg') 
 import matplotlib.pyplot as plt
@@ -841,6 +842,40 @@ def delete_placement_details(request, placement_id):
         messages.success(request, 'Placement details deleted successfully.')
     
     return redirect('placement_year_details', year_id=passout_year_id)
+def generate_student_graph(request):
+    # Get passout years with student count
+    passout_years = PassoutYear.objects.annotate(
+        student_count=Count('placement_details')
+    ).order_by('year')
+
+    # Prepare data for plotting
+    years = [str(year.year) for year in passout_years]
+    student_counts = [year.student_count for year in passout_years]
+
+    # Create the plot
+    plt.figure(figsize=(10, 6))
+    bar_width = 0.7
+    bar_spacing = 0.1
+    x_positions = np.arange(len(years))
+    plt.bar(x_positions, student_counts, color='skyblue', edgecolor='navy', width=bar_width)
+    plt.xticks(x_positions + bar_width / 2, years)
+    plt.title('Number of Students by Passout Year', fontsize=15)
+    plt.xlabel('Passout Year', fontsize=12)
+    plt.ylabel('Number of Students', fontsize=12)
+    plt.tight_layout()
+
+    # Save plot to a bytes buffer
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    graph_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    plt.close()
+
+    context = {
+        'graph': graph_base64
+    }
+    return render(request, 'adminpage/student_graph.html', context)
+
 
 @login_required
 def higher_studies_view(request):

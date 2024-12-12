@@ -34,6 +34,7 @@ urlpatterns = [
     path('delete_passout_year/<int:year_id>/', views.delete_passout_year, name='delete_passout_year'),
     path('placement/update/<int:placement_id>/', views.update_placement_details, name='update_placement_details'),
     path('placement/delete/<int:placement_id>/', views.delete_placement_details, name='delete_placement_details'),
+    path('placement/generate-graph/', views.generate_student_graph, name='generate_student_graph'),
    path('higher-studies/', views.higher_studies_view, name='higher_studies'),
 path('delete-higher-study/<int:higher_study_id>/', views.delete_higher_study, name='delete_higher_study'),
 path('upload-higher-study-file/<int:higher_study_id>/', views.upload_higher_study_file, name='upload_higher_study_file'),
