@@ -762,29 +762,28 @@ def placement_home(request):
             return redirect('placement_year_details', form.instance.id)
     else:
         form = PassoutYearForm()
+
     passout_years = PassoutYear.objects.all()
     context = {
         'form': form,
         'passout_years': passout_years
     }
     return render(request, 'adminpage/placement_home.html', context)
-
 def placement_year_details(request, year_id):
     passout_year = get_object_or_404(PassoutYear, id=year_id)
     placement_details = PlacementDetails.objects.filter(passout_year=passout_year)
     search_query = request.GET.get('search', '')
     if search_query:
         placement_details = placement_details.filter(
-            Q(name__icontains=search_query) |
-            Q(usn__icontains=search_query) |
+            Q(name__icontains=search_query) | 
+            Q(usn__icontains=search_query) | 
             Q(company_name__icontains=search_query)
         )
     context = {
         'passout_year': passout_year,
         'placement_details': placement_details
     }
-    return render(request, 'adminpage/placement_year_details.html', context)
-
+    return render(request, 'adminpage/placement_year_details.html', context)   
 def add_placement_details(request, year_id):
     passout_year = get_object_or_404(PassoutYear, id=year_id)
     if request.method == 'POST':
@@ -796,12 +795,12 @@ def add_placement_details(request, year_id):
             return redirect('placement_year_details', year_id)
     else:
         form = PlacementDetailsForm()
+
     context = {
         'form': form,
         'passout_year': passout_year
     }
     return render(request, 'adminpage/add_placement_details.html', context)
-
 def upload_offer_letter(request, placement_id):
     if request.method == 'POST':
         placement_detail = get_object_or_404(PlacementDetails, id=placement_id)
@@ -810,7 +809,6 @@ def upload_offer_letter(request, placement_id):
             placement_detail.save()
             messages.success(request, 'Offer letter uploaded successfully.')
         return redirect('placement_year_details', year_id=placement_detail.passout_year.id)
-
 def delete_passout_year(request, year_id):
     year = get_object_or_404(PassoutYear, id=year_id)
     if request.method == 'POST':
@@ -827,6 +825,7 @@ def update_placement_details(request, placement_id):
             return redirect('placement_year_details', year_id=placement_detail.passout_year.id)
     else:
         form = PlacementDetailsForm(instance=placement_detail)
+    
     context = {
         'form': form,
         'passout_year': placement_detail.passout_year
@@ -836,10 +835,12 @@ def update_placement_details(request, placement_id):
 def delete_placement_details(request, placement_id):
     placement_detail = get_object_or_404(PlacementDetails, id=placement_id)
     passout_year_id = placement_detail.passout_year.id
+    
     if request.method == 'POST':
         placement_detail.delete()
         messages.success(request, 'Placement details deleted successfully.')
-        return redirect('placement_year_details', year_id=passout_year_id)
+    
+    return redirect('placement_year_details', year_id=passout_year_id)
 
 @login_required
 def higher_studies_view(request):
