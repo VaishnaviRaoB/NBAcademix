@@ -6,173 +6,236 @@
     <title>{% block title %}NBAcademix{% endblock %}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* Reset and Base Styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  /* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f4f4;
-            line-height: 1.6;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f4f4;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
 
-        /* Navbar Styles */
-        .navbar {
-            background-color: #800000;
-            padding: 1rem 2rem;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
+/* Navbar Styles */
+.navbar {
+    background-color: #800000;
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border: 3px solid white; /* White border added */
+}
 
-        .navbar-brand {
-            color: white;
-            font-size: 1.5rem;
-            font-weight: bold;
-            text-decoration: none;
-            transition: transform 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+.navbar-brand {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-decoration: none;
+    transition: transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
 
-        .navbar-brand i {
-            font-size: 1.8rem;
-        }
+.navbar-brand i {
+    font-size: 1.8rem;
+}
 
-        .navbar-brand:hover {
-            transform: scale(1.05);
-        }
+.navbar-brand:hover {
+    transform: scale(1.05);
+}
 
-        .navbar-right {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
 
-        /* Back Arrow Styles */
-        .back-arrow {
-            display: inline-flex;
-            align-items: center;
-            text-decoration: none;
-            color: white;
-            font-size: 1rem;
-            gap: 0.5rem;
-            transition: color 0.3s ease;
-        }
+/* Back Arrow Styles */
+.back-arrow {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    color: white;
+    font-size: 1rem;
+    gap: 0.5rem;
+    transition: color 0.3s ease;
+}
 
-        .back-arrow i {
-            font-size: 1.2rem;
-        }
+.back-arrow i {
+    font-size: 1.2rem;
+}
 
-        .back-arrow:hover {
-            color: #f5f5f5;
-        }
+.back-arrow:hover {
+    color: #f5f5f5;
+}
 
-        /* User Menu Styles */
-        .user-menu {
-            position: relative;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+/* User Menu Styles */
+.user-menu {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
 
-        .user-icon {
-            width: 40px;
-            height: 40px;
-            background-color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #800000;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
+.user-icon {
+    width: 40px;
+    height: 40px;
+    background-color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #800000;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
 
-        .user-menu:hover .user-icon {
-            background-color: #f0f0f0;
-        }
+.user-menu:hover .user-icon {
+    background-color: #f0f0f0;
+}
 
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: 120%;
-            background-color: white;
-            min-width: 200px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-            border-radius: 8px;
-            overflow: hidden;
-        }
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 120%;
+    background-color: white;
+    min-width: 200px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
 
-        .user-menu.active .dropdown-content {
-            display: block;
-        }
+.user-menu.active .dropdown-content {
+    display: block;
+}
 
-        .dropdown-content a {
-            color: #333;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: background-color 0.3s ease;
-        }
+.dropdown-content a {
+    color: #333;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.3s ease;
+}
 
-        .dropdown-content a i {
-            width: 20px;
-        }
+.dropdown-content a i {
+    width: 20px;
+}
 
-        .dropdown-content a:hover {
-            background-color: #f5f5f5;
-            color: #800000;
-        }
+.dropdown-content a:hover {
+    background-color: #f5f5f5;
+    color: #800000;
+}
 
-        /* Footer */
-        .footer {
-            margin-top: auto;
-            background-color: #800000;
-            color: white;
-            padding: 1rem;
-            text-align: center;
-        }
+/* Container Styles */
+.container {
+    flex-grow: 1;
+    padding: 2rem;
+}
 
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+/* Alert Styles */
+.alert {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+}
 
-        /* Mobile Responsiveness */
-        @media (max-width: 768px) {
-            .navbar {
-                padding: 1rem;
-            }
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
 
-            .navbar-brand {
-                font-size: 1.2rem;
-            }
+.alert-error, .alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
 
-            .user-menu .user-text {
-                display: none;
-            }
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
 
-            .container {
-                padding: 1rem;
-            }
-        }
+.alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+/* Footer Styles */
+.footer {
+    margin-top: auto;
+    background-color: #800000;
+    color: white;
+    padding: 1rem;
+    text-align: center;
+    border: 3px solid white; /* White border added */
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 1rem;
+        border-width: 2px; /* Thinner border on mobile */
+    }
+
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+
+    .user-menu .user-text {
+        display: none;
+    }
+
+    .container {
+        padding: 1rem;
+    }
+
+    .footer {
+        padding: 1rem;
+        border-width: 2px; /* Thinner border on mobile */
+    }
+}
+
+/* Scrollbar Styling (Optional) */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #800000;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #650000;
+}
     </style>
 </head>
 <body>
