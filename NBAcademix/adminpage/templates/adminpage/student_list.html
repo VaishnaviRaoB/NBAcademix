@@ -1,10 +1,10 @@
 {% extends 'adminpage/base.html' %}
-
+{% load static %}
 {% block title %}Student List{% endblock %}
 
 {% block content %}
-<div class="student-container">
-    <h2>Student Lists</h2>
+<div class="performance-container">
+    <h2>STUDENT LISTS</h2>
 
     {% if messages %}
         <div class="alert alert-success" id="alert-message">
@@ -12,7 +12,7 @@
         </div>
     {% endif %}
 
-    <div class="add-student-section">
+    <div class="add-performance-section">
         <form method="post" action="" class="add-form">
             {% csrf_token %}
             <div class="form-group">
@@ -30,7 +30,7 @@
     </div>
 
     <div class="table-responsive">
-        <table class="student-table">
+        <table class="performance-table">
             <thead>
                 <tr>
                     <th>Batch Year</th>
@@ -39,12 +39,14 @@
             </thead>
             <tbody id="studentTableBody">
                 {% for student_list in student_lists %}
-                    <tr class="student-row">
+                    <tr class="performance-row">
                         <td>{{ student_list.batch_year }}</td>
                         <td class="action-buttons">
-                            <button type="button" class="btn view-btn" onclick="openModal('modal-{{ student_list.id }}')">
-                                <i class="fas fa-eye"></i> View
-                            </button>
+                            {% if student_list.documents.all %}
+                                <button type="button" class="btn view-btn" onclick="openDocumentModal('modal-{{ student_list.id }}')">
+                                    <i class="fas fa-eye"></i> View Documents
+                                </button>
+                            {% endif %}
 
                             <form method="post" action="{% url 'upload_student_file' student_list.id %}" enctype="multipart/form-data" class="upload-form">
                                 {% csrf_token %}
@@ -67,197 +69,224 @@
         </table>
     </div>
 
+    <!-- Document Modals -->
     {% for student_list in student_lists %}
-        <div id="modal-{{ student_list.id }}" class="modal">
-            <div class="modal-content">
+        {% if student_list.documents.all %}
+        <div id="modal-{{ student_list.id }}" class="modal document-modal">
+            <div class="modal-content document-modal-content">
                 <div class="modal-header">
-                    <h3>Documents for Batch Year {{ student_list.batch_year }}</h3>
-                    <span class="close" onclick="closeModal('modal-{{ student_list.id }}')">&times;</span>
+                    <h3>Documents: Batch Year {{ student_list.batch_year }}</h3>
+                    <span class="close" onclick="closeDocumentModal('modal-{{ student_list.id }}')">&times;</span>
                 </div>
-                <div class="modal-body">
-                    {% if student_list.documents.all %}
-                        <div class="document-grid">
-                            {% for doc in student_list.documents.all %}
-                                <div class="document-card">
-                                    <div class="document-icon">
-                                        <i class="fas fa-file-alt"></i>
+                <div class="modal-body document-modal-body">
+                    <div class="document-grid">
+                        {% for doc in student_list.documents.all %}
+                            <div class="document-card">
+                                <div class="document-icon">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <div class="document-info">
+                                    <p class="document-name">{{ doc.original_filename|default:doc.document.name }}</p>
+                                    <div class="document-actions">
+                                        <a href="{{ doc.document.url }}" target="_blank" class="btn view-btn">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                        <a href="{{ doc.document.url }}" download class="btn download-btn">
+                                            <i class="fas fa-download"></i> Download
+                                        </a>
                                     </div>
-                                    <div class="document-info">
-                                        <p class="document-name">{{ doc.original_filename|default:doc.document.name }}</p>
-                                        <div class="document-actions">
-                                            <a href="{{ doc.document.url }}" target="_blank" class="document-link">
-                                                <i class="fas fa-eye"></i> View
-                                            </a>
-                                            <a href="{{ doc.document.url }}" download class="document-link download-link">
-                                                <i class="fas fa-download"></i> Download
-                                            </a>
-                                        </div>
-                                        <div class="document-actions">
-                                            <form method="post" action="{% url 'delete_student_file' doc.id %}" class="delete-form" onsubmit="return confirm('Are you sure you want to delete this document?');">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn delete-btn">
-                                                    <i class="fas fa-trash"></i> Delete File
-                                                </button>
-                                            </form>
-                                        </div>
-                                        <div class="document-date">
-                                            {{ doc.uploaded_at|date:"d/m/Y H:i" }}
-                                        </div>
+                                    <div class="document-delete-actions">
+                                        <form method="post" action="{% url 'delete_student_file' doc.id %}" class="delete-form" onsubmit="return confirm('Are you sure you want to delete this document?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn delete-btn">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                    <div class="document-date">
+                                        Uploaded: {{ doc.uploaded_at|date:"d/m/Y H:i" }}
                                     </div>
                                 </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="no-documents">No documents uploaded yet.</p>
-                    {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
+        {% endif %}
     {% endfor %}
 </div>
 
 <style>
-    .student-container {
-        padding: 40px 20px;
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-
-    h2 {
-        color: #800000;
-        margin-bottom: 20px;
-        text-align: center;
-        font-size: 28px;
-    }
-
-    .alert {
-        background-color: #28a745;
-        color: white;
-        padding: 10px;
-        text-align: center;
-        border-radius: 5px;
-        margin-bottom: 20px;
-        transition: opacity 0.5s ease-in-out;
-    }
-
-    .alert.hidden {
-        opacity: 0;
-        pointer-events: none;
-    }
-
-    .add-student-section {
-        background: #ffffff;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        margin-bottom: 30px;
-        border: 1px solid black;
-        width: 50rem;
-    max-width: 90%; /* This ensures the box doesn't overflow on mobile */
-    margin-left: auto;
-    margin-right: auto;
-    }
-
-    .form-group {
-        display: flex;
-        gap: 15px;
-        flex-wrap: wrap;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .form-input {
-        padding: 10px 15px;
-        border: 1px solid black;
-        border-radius: 4px;
-        font-size: 14px;
-        width: 250px;
-        margin-bottom: 0;
-        height: 40px;
-        transition: border-color 0.3s;
-    }
-
-    .form-input:focus {
-        border-color: #800000;
-        outline: none;
-    }
-
-    .add-btn {
-        padding: 10px 20px;
-        background-color: #800000;
-        color: white;
-        border-radius: 4px;
-        border: none;
-        cursor: pointer;
-        transition: background-color 0.3s;
-        height: 40px;
-        line-height: 20px;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-
-    .add-btn:hover {
-        background-color: #600000;
-    }
-
-    .search-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-bottom: 20px;
-        gap: 10px;
-    }
-
-    .search-input {
-        width: 50%;
-        padding: 10px 15px;
-        border: 1px solid black;
-        border-radius: 4px;
-        font-size: 14px;
-    }
-
-    .search-input:focus {
-        border-color: #800000;
-        outline: none;
-    }
-
-    .search-icon {
-        font-size: 20px;
-        color: #800000;
-        cursor: pointer;
-    }
-
-    .table-responsive {
-        margin-bottom: 20px;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        overflow-x: auto;
-    }
-
-    .student-table {
-    width: 100%; /* This matches the performance-table width */
+html, body {
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+    background-color: transparent;
+    background: transparent;
+    height: 100%;
+    border: white 2px;
+    scroll-behavior: smooth;
+    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),                 
+    url('{% static "smvitm.jpg" %}') no-repeat center center; 
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
 }
 
-.student-table th,
-.student-table td {
-    padding: 12px;
+.performance-container {
+    padding: 40px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-family: 'Arial', sans-serif;
+}
+
+h2 {
+    color: WHITE;
+    margin-bottom: 20px;
     text-align: center;
-    border: 1px solid black;
-    vertical-align: middle;
+    font-size: 28px;
+    font-weight: bold;
 }
 
-.student-table th {
+/* Alert Styles */
+.alert {
+    background-color: #28a745;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.alert.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Add Student Section */
+.add-performance-section {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+    border: 1px solid #ddd;
+}
+
+.form-group {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+}
+
+.form-input {
+    padding: 10px 15px;
+    border: 1px solid black;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 250px;
+    height: 40px;
+    transition: all 0.3s ease;
+}
+
+.form-input:focus {
+    border-color: #800000;
+    outline: none;
+    box-shadow: 0 0 5px rgba(128, 0, 0, 0.3);
+}
+
+/* Buttons */
+.btn {
+    padding: 10px 15px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+    height: 40px;
+}
+
+.add-btn {
     background-color: #800000;
     color: white;
-    font-weight: 500;
 }
 
-.student-table tr:hover {
-    background-color: #f8f9fa;
+.add-btn:hover {
+    background-color: #600000;
 }
 
+.view-btn {
+    background-color: #007bff;
+    color: white;
+}
+
+.view-btn:hover {
+    background-color: #0056b3;
+}
+
+.upload-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.upload-btn:hover {
+    background-color: #218838;
+}
+
+.delete-btn {
+    background-color: #dc3545;
+    color: white;
+}
+
+.delete-btn:hover {
+    background-color: #c82333;
+}
+
+.download-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.download-btn:hover {
+    background-color: #218838;
+}
+
+/* Search Container */
+.search-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 10px;
+}
+
+.search-input {
+    width: 50%;
+    padding: 10px 15px;
+    border: 1px solid black;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.search-input:focus {
+    border-color: #800000;
+    outline: none;
+}
+
+.search-icon {
+    font-size: 20px;
+    color: WHITE;
+    cursor: pointer;
+}
+
+/* Table Responsive */
 .table-responsive {
     margin-bottom: 20px;
     background: white;
@@ -265,14 +294,32 @@
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     overflow-x: auto;
 }
-.btn {
-    border: none;
-    padding: 8px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+
+.performance-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
+.performance-table th,
+.performance-table td {
+    padding: 12px;
+    text-align: center;
+    border: 1px solid black;
+    vertical-align: middle;
+}
+
+.performance-table th {
+    background-color: #800000;
+    color: white;
+    font-weight: 600;
+}
+
+.performance-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Action Buttons Container */
 .action-buttons {
     display: flex;
     flex-wrap: wrap;
@@ -282,150 +329,172 @@
     min-height: 40px;
     align-items: center;
 }
-    .view-btn {
-        background-color: #007bff;
-        color: white;
-    }
 
-    .view-btn:hover {
-        background-color: #0056b3;
-    }
+/* File Input Styling */
+.file-input {
+    display: none;
+}
 
-    .upload-btn {
-        background-color: #28a745;
-        color: white;
-    }
+/* Document Modal Styles */
+.document-modal-content {
+    width: 90%;
+    max-width: 1200px;
+}
 
-    .upload-btn:hover {
-        background-color: #218838;
-    }
+.document-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
 
-    .delete-btn {
-        background-color: #dc3545;
-        color: white;
-    }
+.document-card {
+    width: 250px;
+    background-color: #f9f9f9;
+    border: 1px solid black;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
 
-    .delete-btn:hover {
-        background-color: #c82333;
-    }
+.document-icon {
+    font-size: 60px;
+    color: #800000;
+    margin-bottom: 15px;
+}
 
-    .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0, 0, 0, 0.7);
-        justify-content: center;
-        align-items: center;
-    }
+.document-name {
+    font-weight: bold;
+    margin-bottom: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
-    .modal-content {
-        background-color: white;
-        border-radius: 8px;
-        padding: 20px;
-        width: 60%;
-        max-height: 80%;
-        overflow-y: auto;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
+.document-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
 
-    .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
+.document-delete-actions {
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: center;
+}
 
-    .document-grid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 15px;
-    }
+.document-date {
+    font-size: 12px;
+    color: #666;
+}
 
-    .document-card {
-        width: 150px;
-        background: #f4f4f4;
-        border: 1px solid #ddd;
-        border-radius: 8px;
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 1000px;
+    max-height: 80%;
+    overflow-y: auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background-color: #f4f4f4;
+    border-bottom: 1px solid #ddd;
+}
+
+.close {
+    font-size: 24px;
+    cursor: pointer;
+    color: #800000;
+}
+
+.close:hover {
+    color: #600000;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .performance-container {
         padding: 10px;
-        text-align: center;
     }
 
-    .document-icon {
-        font-size: 40px;
-        color: #007bff;
-        margin-bottom: 10px;
+    .form-group {
+        flex-direction: column;
     }
 
-    .document-name {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    .search-input {
         width: 100%;
-        display: block;
     }
 
-    .document-actions {
-        display: flex;
-        justify-content: space-between;
-        gap: 8px;
-        margin-bottom: 10px;
+    .action-buttons {
+        flex-direction: column;
     }
-
-    .document-link {
-        text-decoration: none;
-        color: #007bff;
-        font-size: 14px;
-        display: flex;
-        align-items: center;
-    }
-
-    .download-link {
-        color: #28a745;
-    }
-
-    .document-date {
-        font-size: 12px;
-        color: #888;
-    }
+}
 </style>
 
 <script>
-    // Open Modal
-    function openModal(modalId) {
-        document.getElementById(modalId).style.display = 'flex';
+    // File input trigger
+    document.querySelectorAll('.upload-form').forEach(form => {
+        form.querySelector('.upload-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            form.querySelector('.file-input').click();
+        });
+
+        form.querySelector('.file-input').addEventListener('change', function() {
+            form.submit();
+        });
+    });
+
+    // Document Modal Functions
+    function openDocumentModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'flex';
+        }
     }
 
-    // Close Modal
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
+    function closeDocumentModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'none';
+        }
     }
 
-    // Search Functionality
-    document.getElementById('searchInput').addEventListener('input', function() {
-        const searchValue = this.value.toLowerCase();
-        const rows = document.querySelectorAll('.student-row');
-        
-        rows.forEach(row => {
-            const batchYearCell = row.querySelector('td:first-child');
-            const batchYearText = batchYearCell.textContent.toLowerCase();
-            
-            if (batchYearText.includes(searchValue)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
+    // Close modal when clicking outside
+    document.addEventListener('click', function(event) {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
             }
         });
     });
 
-    // Close alert after 3 seconds
+    // Alert message fading
     setTimeout(() => {
-        const alertMessage = document.getElementById('alert-message');
-        if (alertMessage) {
-            alertMessage.classList.add('hidden');
-        }
+        const alertMessage = document.getElementById("alert-message");
+        if (alertMessage) alertMessage.classList.add("hidden");
     }, 3000);
 </script>
 {% endblock %}

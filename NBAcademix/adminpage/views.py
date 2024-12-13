@@ -170,6 +170,7 @@ def logout_view(request):
     logout(request)
     messages.success(request, 'You have been successfully logged out.')
     return redirect('landing_page')
+            
 
 @login_required
 def delete_account(request):

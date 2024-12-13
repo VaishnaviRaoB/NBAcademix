@@ -1,5 +1,5 @@
 {% extends 'adminpage/base.html' %}
-
+{% load static %}
 {% block title %}Profile Settings - NBAcademix{% endblock %}
 
 {% block content %}
@@ -112,17 +112,44 @@
 </div>
 
 <style>
+    /* Global Body and HTML Styling */
+    html, body {
+        font-family: 'Arial', sans-serif;
+        line-height: 1.6;
+        background-color: transparent;
+        height: 100%;
+        margin: 0;
+        border: white 2px;
+        scroll-behavior: smooth;
+        background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),
+        url('{% static "smvitm.jpg" %}') no-repeat center center;
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+    }
+
     /* Profile Page Container */
     .profile-container {
-        max-width: 900px;
-        margin: 2rem auto;
-        padding: 1rem;
+        max-width: 950px;
+        margin: 3rem auto;
+        padding: 2rem;
         background-color: #ffffff;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        animation: fadeIn 1s ease-out;
         overflow: hidden;
     }
-    
+
+    /* Animations */
+    @keyframes fadeIn {
+        0% {
+            opacity: 0;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
+
     /* Profile Header */
     .profile-header {
         background: linear-gradient(135deg, #800000, #990000);
@@ -283,31 +310,6 @@
         gap: 0.5rem;
         justify-content: center;
     }
-    
-    /* Responsive Styles */
-    @media (max-width: 768px) {
-        .profile-container {
-            margin: 1rem;
-            padding: 1rem;
-        }
-    
-        .button-group {
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-    
-        .info-item {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-    
-        .info-item .label {
-            min-width: auto;
-        }
-    
-        .btn {
-            width: 100%;
-        }
-    }
-    </style>
+</style>
+
 {% endblock %}

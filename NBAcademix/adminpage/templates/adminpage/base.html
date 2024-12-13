@@ -86,6 +86,7 @@ body {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    position: relative;
 }
 
 .user-icon {
@@ -109,14 +110,16 @@ body {
 .dropdown-content {
     display: none;
     position: absolute;
-    right: 0;
-    top: 120%;
+    right: auto; /* Reset right positioning */
+    left: -200px; /* Shift the dropdown 200px to the left (adjust based on dropdown width) */
+    top: 120%; /* Position below the icon */
     background-color: white;
     min-width: 200px;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
     overflow: hidden;
 }
+
 
 .user-menu.active .dropdown-content {
     display: block;

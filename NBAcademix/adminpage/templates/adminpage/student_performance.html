@@ -1,10 +1,10 @@
 {% extends 'adminpage/base.html' %}
-
+{% load static %}
 {% block title %}Student Performance{% endblock %}
 
 {% block content %}
 <div class="performance-container">
-    <h2>Student Performance Records</h2>
+    <h2>STUDENTS PERFORMANCE</h2>
 
     <!-- Display Success Message -->
     {% if messages %}
@@ -208,6 +208,22 @@
 </div>
 
 <style>
+
+html, body {
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+    background-color: transparent;
+    background: transparent;
+    height: 100%;
+    border: white 2px;
+    scroll-behavior: smooth;
+    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),                 
+    url('{% static "smvitm.jpg" %}') no-repeat center center; 
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
     /* Global Container Styles */
     .document-modal-content {
         width: 90%;
@@ -283,7 +299,7 @@
     }
 
     h2 {
-        color: #800000;
+        color: WHITE;
         margin-bottom: 20px;
         text-align: center;
         font-size: 28px;
@@ -426,7 +442,7 @@
 
     .search-icon {
         font-size: 20px;
-        color: #800000;
+        color: WHITE;
         cursor: pointer;
     }
 
@@ -480,44 +496,45 @@
         align-items: center;
     }
 
-    /* Dropdown Styles */
     .dropdown {
-        position: relative;
-    }
+    position: relative;
+}
 
-    .dropdown-toggle {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
+.dropdown-toggle {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
 
-    .dropdown-menu {
-        display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        z-index: 1000;
-        background-color: white;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        min-width: 200px;
-    }
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: -100%; /* Move the dropdown upwards, over the button */
+    left: 0;
+    z-index: 1000;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    min-width: 200px;
+    margin-bottom: 5px; /* Add space between button and dropdown */
+}
 
-    .dropdown:hover .dropdown-menu {
-        display: block;
-    }
+.dropdown:hover .dropdown-menu {
+    display: block;
+}
 
-    .dropdown-item {
-        padding: 8px 12px;
-        color: #333;
-        text-decoration: none;
-        display: block;
-    }
+.dropdown-item {
+    padding: 8px 12px;
+    color: #333;
+    text-decoration: none;
+    display: block;
+}
 
-    .dropdown-item:hover {
-        background-color: #f8f9fa;
-    }
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
 
     /* Modal Styles */
     .modal {

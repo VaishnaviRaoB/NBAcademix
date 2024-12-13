@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-xqnz+i^-7z#=l4*vtbi#$fgvt_zin=hg@v#1*6dpd^e$aql2ri
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 import os
 
 # For handling file uploads
