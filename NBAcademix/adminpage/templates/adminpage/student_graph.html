@@ -1,4 +1,3 @@
-
 {% extends 'adminpage/base.html' %}
 {% block content %}
 <div class="container mt-5">
@@ -9,15 +8,31 @@
                     <h3 class="text-center">Student Count by Passout Year</h3>
                 </div>
                 <div class="card-body text-center">
-                    <img src="data:image/png;base64,{{ graph }}" alt="Student Count Graph" class="img-fluid">
+                    <img src="data:image/png;base64,{{ graph }}" alt="Student Count Graph" class="img-fluid" id="student-graph">
                 </div>
             </div>
             <div class="text-center mt-3">
-                <a href="{% url 'placement_home' %}" class="btn btn-secondary">Back to Placement Home</a>
+                <a href="{% url 'placement_home' %}" class="btn btn-secondary me-2">Back to Placement Home</a>
+                <button id="download-graph" class="btn btn-primary">Download Graph</button>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-path('placement/generate-graph/', views.generate_student_graph, name='generate_student_graph'),
+<script>
+document.getElementById('download-graph').addEventListener('click', function() {
+    // Get the image source
+    var imgSrc = document.getElementById('student-graph').src;
+    
+    // Create a temporary link element
+    var downloadLink = document.createElement('a');
+    downloadLink.href = imgSrc;
+    downloadLink.download = 'student_count_graph.png';
+    
+    // Append to the body, click, and remove
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+});
+</script>
+{% endblock %}
