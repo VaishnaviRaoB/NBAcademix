@@ -188,7 +188,19 @@ html, body {
 }
 
 /* Navbar Styles */
-
+/* Add this to your existing CSS, ideally in a media query for small screens */
+@media (max-width: 768px) {
+    .profile-dropdown {
+        position: absolute;
+        top: 100%; /* Position dropdown below the navbar */
+        right: 0;
+        min-width: 200px;
+        z-index: 1000;
+        background-color: white;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-radius: 8px;
+    }
+}
 
 /* Sidebar Styles */
 .sidebar {
