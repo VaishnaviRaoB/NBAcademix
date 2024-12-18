@@ -1,218 +1,359 @@
 {% extends 'adminpage/base.html' %}
+{% load static %}
+
 {% block content %}
+<div class="placement-container">
+    <h2>PLACEMENT TRACKING SYSTEM</h2>
+
+    <!-- Display Success Message -->
+    {% if messages %}
+        <div class="alert alert-success" id="alert-message">
+            {{ messages.0 }}
+        </div>
+    {% endif %}
+
+    <!-- Add Passout Year Form -->
+    <div class="add-performance-section">
+        <form method="post" class="add-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <input type="text" name="year" placeholder="Enter Passout Year" required class="form-input" style="width: 300px;">
+                <button type="submit" class="btn add-btn">
+                    <i class="fas fa-plus"></i> Add Passout Year
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search by year..." class="search-input">
+        <i class="fas fa-search search-icon"></i>
+    </div>
+
+    <!-- Passout Years Table -->
+    <div class="table-responsive">
+        <table class="performance-table">
+            <thead>
+                <tr>
+                    <th>Passout Year</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="passoutYearsTableBody">
+                {% for year in passout_years %}
+                    <tr class="performance-row">
+                        <td>{{ year.year }}</td>
+                        <td class="action-buttons">
+                            <a href="{% url 'placement_year_details' year.id %}" class="btn view-btn">
+                                <i class="fas fa-eye"></i> View Details
+                            </a>
+                            <form method="post" action="{% url 'delete_passout_year' year.id %}" class="delete-form" onsubmit="return confirm('Are you sure you want to delete this passout year?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn delete-btn">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="2" class="text-center">No passout years added yet.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Generate Graph Button -->
+    <div class="btn-container">
+        <a href="{% url 'generate_student_graph' %}" class="btn generate-graph-btn">
+            <i class="fas fa-chart-pie"></i> Generate Student Count Graph
+        </a>
+    </div>
+</div>
+
 <style>
+    html, body {
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),                 
+    url('{% static "smvitm.jpg" %}') no-repeat center center; 
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: white;
+}
+
+/* Container Styles */
+.placement-container {
+    padding: 40px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-family: 'Arial', sans-serif;
+}
+
+/* Heading Styles */
+h2 {
+    color: WHITE;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+/* Alert Styles */
+.alert {
+    background-color: #28a745;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.alert.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Add Performance Section */
+.add-performance-section {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+    border: 1px solid #ddd;
+}
+
+.form-group {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Form Input Styles */
+.form-input {
+    padding: 12px 15px;
+    border: 2px solid black;
+    border-radius: 6px;
+    font-size: 16px;
+    width: 300px;
+    height: 50px;
+    transition: all 0.3s ease;
+    color: #333;
+    background-color: white;
+}
+
+.form-input::placeholder {
+    color: black;
+    opacity: 0.7;
+}
+
+.form-input:focus {
+    border-color: #600000;
+    outline: none;
+    box-shadow: 0 0 8px rgba(128, 0, 0, 0.3);
+}
+
+/* Button Styles */
+.btn {
+    padding: 10px 15px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+    height: 40px;
+}
+
+.add-btn {
+    background-color: #800000;
+    color: white;
+    height: 50px;
+}
+
+.add-btn:hover {
+    background-color: #600000;
+}
+.view-btn {
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+}
+
+.view-btn:hover {
+    background-color: #0056b3;
+}
+
+.delete-btn {
+    background-color: #dc3545;
+    color: white;
+}
+
+.delete-btn:hover {
+    background-color: #c82333;
+}
+
+/* Search Container */
+.search-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 10px;
+}
+
+.search-input {
+    width: 50%;
+    padding: 10px 15px;
+    border: 1px solid black;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.search-input:focus {
+    border-color: #800000;
+    outline: none;
+}
+
+.search-icon {
+    font-size: 20px;
+    color: WHITE;
+    cursor: pointer;
+}
+
+/* Table Responsive */
+.table-responsive {
+    margin-bottom: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow-x: auto;
+}
+
+.performance-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.performance-table th,
+.performance-table td {
+    padding: 12px;
+    text-align: center;
+    border: 1px solid black;
+    vertical-align: middle;
+    color: black;
+}
+
+.performance-table th {
+    background-color: #800000;
+    color: white;
+    font-weight: 600;
+}
+
+.performance-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Action Buttons Container */
+.action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    padding: 4px;
+    min-height: 40px;
+    align-items: center;
+}
+
+/* Generate Graph Button */
+.btn-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.generate-graph-btn {
+    display: inline-flex;
+    padding: 15px 25px;
+    background-color: #FFD700;
+    color: #800000;
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: none;
+    cursor: pointer;
+}
+
+.generate-graph-btn:hover {
+    background-color: #FFC000;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
     .placement-container {
-        max-width: 900px;
-        margin: 2rem auto;
-        padding: 2.5rem;
-        background-color: #ffffff;
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-        border-radius: 10px;
+        padding: 10px;
     }
 
-    .placement-header {
-        text-align: center;
-        margin-bottom: 2.5rem;
-        color: #2c3e50;
-        font-size: 2.5rem;
-        font-weight: 700;
-    }
-
-    .placement-content {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 2.5rem;
-    }
-
-    .card {
-        background-color: #f8f9fa;
-        border: 1px solid #e2e6ea;
-        border-radius: 10px;
-        padding: 2rem;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
-    }
-
-    .card-header {
-        text-align: center;
-        margin-bottom: 2rem;
-        color: #2c3e50;
-        font-weight: 600;
-        font-size: 1.5rem;
-        border-bottom: 3px solid #3498db;
-        padding-bottom: 0.75rem;
-    }
-
-    .batch-list {
-        display: flex;
+    .form-group {
         flex-direction: column;
-        gap: 1rem;
-    }
-
-    .batch-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background-color: #ffffff;
-        border: 1px solid #e2e6ea;
-        border-radius: 6px;
-        padding: 1.25rem;
-        font-size: 1.2rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-
-    .batch-link {
-        color: #2c3e50;
-        text-decoration: none;
-        font-weight: 600;
-        flex-grow: 1;
-        font-size: 1.1rem;
-        letter-spacing: 0.5px;
-    }
-
-    .batch-item:hover {
-        background-color: #f1f3f5;
-        transform: translateX(5px);
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .delete-btn {
-        background-color: #e74c3c;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        padding: 0.35rem 0.75rem;
-        margin-left: 0.5rem;
-        cursor: pointer;
-        font-size: 0.9rem;
-        transition: background-color 0.3s ease;
-    }
-
-    .add-form {
-        display: flex;
-        flex-direction: column;
-        gap: 1.25rem;
     }
 
     .form-input {
         width: 100%;
-        padding: 0.75rem;
-        font-size: 1rem;
-        border: 1px solid #ced4da;
-        border-radius: 6px;
     }
 
-    .submit-btn {
-        font-size: 1.1rem;
-        padding: 0.75rem 1.5rem;
-        background-color: #3498db;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
+    .search-input {
+        width: 100%;
     }
 
-    .submit-btn:hover {
-        background-color: #2980b9;
+    .action-buttons {
+        flex-direction: column;
     }
 
-    .graph-btn {
-        font-size: 1.1rem;
-        padding: 0.75rem 1.5rem;
-        background-color: #2ecc71;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-        margin-top: 1rem;
-        display: inline-block;
+    .generate-graph-btn {
+        width: 100%;
     }
-
-    .graph-btn:hover {
-        background-color: #27ae60;
-    }
-
-    .btn-container {
-        text-align: center;
-        margin-top: 2rem;
-    }
-
-    @media (max-width: 768px) {
-        .placement-container {
-            margin: 1rem;
-            padding: 1.5rem;
-        }
-
-        .placement-content {
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-        }
-
-        .card-header {
-            font-size: 1.3rem;
-        }
-
-        .batch-item {
-            font-size: 1rem;
-        }
-    }
+}
 </style>
 
-<div class="placement-container">
-    <h1 class="placement-header">Placement Tracking System</h1>
+<script>
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        const searchValue = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#passoutYearsTableBody tr');
+        
+        rows.forEach(row => {
+            const yearCell = row.querySelector('td:first-child');
+            if (yearCell.textContent.toLowerCase().includes(searchValue)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} text-center">
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %}
-
-    <div class="placement-content">
-        <div class="card">
-            <h3 class="card-header">Add Passout Year</h3>
-            <form method="post" class="add-form">
-                {% csrf_token %}
-                {% for field in form %}
-                    <div>
-                        {{ field.label_tag }}
-                        {{ field }}
-                        {% if field.errors %}
-                            <div class="text-danger">{{ field.errors }}</div>
-                        {% endif %}
-                    </div>
-                {% endfor %}
-                <button type="submit" class="submit-btn">Add Passout Year</button>
-            </form>
-        </div>
-
-        <div class="card">
-            <h3 class="card-header">Existing Passout Years</h3>
-            <div class="batch-list">
-                {% for year in passout_years %}
-                    <div class="batch-item">
-                        <a href="{% url 'placement_year_details' year.id %}" class="batch-link">
-                            {{ year.year }}
-                        </a>
-                        <form method="post" action="{% url 'delete_passout_year' year.id %}" style="display: inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this passout year?')">
-                                Delete
-                            </button>
-                        </form>
-                    </div>
-                {% empty %}
-                    <p class="text-center text-muted">No passout years added yet.</p>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-
-    <div class="btn-container">
-        <a href="{% url 'generate_student_graph' %}" class="graph-btn">Generate Student Count Graph</a>
-    </div>
-</div>
+    setTimeout(() => {
+        const alertMessage = document.getElementById("alert-message");
+        if (alertMessage) alertMessage.classList.add("hidden");
+    }, 3000);
+</script>
 {% endblock %}

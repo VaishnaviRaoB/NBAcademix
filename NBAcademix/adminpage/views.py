@@ -7,11 +7,14 @@ from django.conf import settings
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import AuthenticationForm
 import re
+from django.core.exceptions import ValidationError
+from django.views.decorators.http import require_http_methods
+from django.db.models import Q
 from django.dispatch import receiver
 from django.db.models import Count
 from django.db.models.signals import post_delete
-from .models import StudentPerformance, Document ,  UserProfile, StudentList, StudentDocument, AchievementDocument, Achievement,PerformanceChart,PassoutYear,PlacementDetails,HigherStudyDocument,HigherStudy
-from django.http import HttpResponse
+from .models import StudentPerformance, Document ,  UserProfile, StudentList, StudentDocument, AchievementDocument, Achievement,PerformanceChart,PassoutYear,PlacementDetails,OfferLetter,HigherStudyDocument,HigherStudy
+from django.http import HttpResponse , JsonResponse
 from wsgiref.util import FileWrapper
 import base64
 import io
@@ -31,8 +34,7 @@ from .forms import (
     UserUpdateForm, 
     UserProfileUpdateForm, 
     CustomPasswordChangeForm,
-   PassoutYearForm,
-   PlacementDetailsForm
+ 
    
 )
 
@@ -424,6 +426,7 @@ def delete_student_file(request, document_id):
         messages.success(request, "File deleted successfully")
         return redirect('student_list')
     return redirect('student_list')  
+
 @login_required
 def achievement_view(request):
     """Display and manage achievements."""
@@ -756,24 +759,27 @@ def delete_performance_chart_if_no_documents(sender, instance, **kwargs):
             performance_chart.delete()
         except PerformanceChart.DoesNotExist:
             pass
+        
+@login_required
 def placement_home(request):
     if request.method == 'POST':
-        form = PassoutYearForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('placement_year_details', form.instance.id)
-    else:
-        form = PassoutYearForm()
-
+        year = request.POST.get('year')
+        if year:
+            passout_year = PassoutYear.objects.create(year=year)
+            return redirect('placement_year_details', year_id=passout_year.id)
     passout_years = PassoutYear.objects.all()
     context = {
-        'form': form,
         'passout_years': passout_years
     }
     return render(request, 'adminpage/placement_home.html', context)
+
+# Details for a specific passout year, including placement details
+@login_required
 def placement_year_details(request, year_id):
     passout_year = get_object_or_404(PassoutYear, id=year_id)
     placement_details = PlacementDetails.objects.filter(passout_year=passout_year)
+    
+    # If search query is present
     search_query = request.GET.get('search', '')
     if search_query:
         placement_details = placement_details.filter(
@@ -781,79 +787,178 @@ def placement_year_details(request, year_id):
             Q(usn__icontains=search_query) | 
             Q(company_name__icontains=search_query)
         )
+    
     context = {
         'passout_year': passout_year,
         'placement_details': placement_details
     }
-    return render(request, 'adminpage/placement_year_details.html', context)   
+    return render(request, 'adminpage/placement_year_details.html', context)
+
+# Add Placement Details
+@login_required
+@login_required
+@require_http_methods(["POST"])
 def add_placement_details(request, year_id):
     passout_year = get_object_or_404(PassoutYear, id=year_id)
-    if request.method == 'POST':
-        form = PlacementDetailsForm(request.POST)
-        if form.is_valid():
-            placement_details = form.save(commit=False)
-            placement_details.passout_year = passout_year
-            placement_details.save()
-            return redirect('placement_year_details', year_id)
-    else:
-        form = PlacementDetailsForm()
 
-    context = {
-        'form': form,
-        'passout_year': passout_year
-    }
-    return render(request, 'adminpage/add_placement_details.html', context)
-def upload_offer_letter(request, placement_id):
+    name = request.POST.get('name')
+    usn = request.POST.get('usn')
+    company_name = request.POST.get('company_name')
+    ctc = request.POST.get('ctc')
+
+    if name and usn and company_name and ctc:
+        try:
+            # First create the placement details
+            placement_detail = PlacementDetails.objects.create(
+                passout_year=passout_year,
+                name=name,
+                usn=usn,
+                company_name=company_name,
+                ctc=ctc
+            )
+
+            # If an offer letter was uploaded, create it separately
+            if request.FILES.get('offer_letter'):
+                OfferLetter.objects.create(
+                    placement=placement_detail,
+                    document=request.FILES['offer_letter']
+                )
+
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Placement details added successfully!'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            }, status=400)
+    else:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Missing required fields.'
+        }, status=400)
+
+@login_required
+def delete_offer_letter(request, id):
     if request.method == 'POST':
-        placement_detail = get_object_or_404(PlacementDetails, id=placement_id)
-        if 'offer_letter' in request.FILES:
-            placement_detail.offer_letter = request.FILES['offer_letter']
-            placement_detail.save()
-            messages.success(request, 'Offer letter uploaded successfully.')
-        return redirect('placement_year_details', year_id=placement_detail.passout_year.id)
+        try:
+            placement = PlacementDetails.objects.get(id=id)
+            if placement.offer_letter:
+                # Delete the file
+                placement.offer_letter.delete()
+                placement.save()
+                return JsonResponse({'status': 'success', 'message': 'Offer letter deleted successfully'})
+        except PlacementDetails.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Record not found'})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+
+@login_required
+def update_placement_details(request, id):
+    if request.method == 'POST':
+        try:
+            placement = PlacementDetails.objects.get(id=id)
+            placement.name = request.POST.get('name')
+            placement.usn = request.POST.get('usn')
+            placement.company_name = request.POST.get('company_name')
+            placement.ctc = request.POST.get('ctc')
+            placement.save()
+            return JsonResponse({'status': 'success', 'message': 'Details updated successfully'})
+        except PlacementDetails.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Record not found'})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+        
+@login_required
 def delete_passout_year(request, year_id):
-    year = get_object_or_404(PassoutYear, id=year_id)
-    if request.method == 'POST':
-        year.delete()
-        messages.success(request, f'Passout Year {year.year} deleted successfully.')
+    # Fetch the PassoutYear object based on the year_id
+    passout_year = get_object_or_404(PassoutYear, id=year_id)
+    passout_year.delete()
     return redirect('placement_home')
 
-def update_placement_details(request, placement_id):
-    placement_detail = get_object_or_404(PlacementDetails, id=placement_id)
+@login_required
+def get_placement_for_edit(request, pk):
+    # Fetch the PlacementDetails object based on the primary key (pk)
+    placement = get_object_or_404(PlacementDetails, pk=pk)
+
+    # If the request is a POST, handle the form submission
     if request.method == 'POST':
-        form = PlacementDetailsForm(request.POST, instance=placement_detail)
+        form = PlacementDetails(request.POST, instance=placement)
         if form.is_valid():
             form.save()
-            return redirect('placement_year_details', year_id=placement_detail.passout_year.id)
+            return redirect('placement_home')  # Redirect to a relevant page after saving the form
     else:
-        form = PlacementDetailsForm(instance=placement_detail)
-    
-    context = {
-        'form': form,
-        'passout_year': placement_detail.passout_year
-    }
-    return render(request, 'adminpage/add_placement_details.html', context)
+        # If it's a GET request, render the form with the existing placement details
+        form = PlacementDetails(instance=placement)
 
+    return render(request, 'adminpage/placement_edit.html', {'form': form, 'placement': placement})
+
+# Delete Placement Details
+@login_required
+@require_http_methods(["POST"])
 def delete_placement_details(request, placement_id):
-    placement_detail = get_object_or_404(PlacementDetails, id=placement_id)
-    passout_year_id = placement_detail.passout_year.id
-    
-    if request.method == 'POST':
+    try:
+        placement_detail = get_object_or_404(PlacementDetails, id=placement_id)
+        
+        # The associated OfferLetter will be deleted automatically due to CASCADE
         placement_detail.delete()
-        messages.success(request, 'Placement details deleted successfully.')
-    
-    return redirect('placement_year_details', year_id=passout_year_id)
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Placement details deleted successfully!'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error deleting placement details: {str(e)}'
+        }, status=400)
+
+@login_required
+def upload_offer_letter(request, placement_id):
+    try:
+        placement = get_object_or_404(PlacementDetails, id=placement_id)
+
+        if request.method == 'POST' and request.FILES.get('document'):
+            uploaded_file = request.FILES['document']
+            
+            # Check if an offer letter already exists
+            if hasattr(placement, 'offer_letter'):
+                # Update existing offer letter
+                placement.offer_letter.document = uploaded_file
+                placement.offer_letter.save()
+            else:
+                # Create new offer letter
+                OfferLetter.objects.create(
+                    placement=placement,
+                    document=uploaded_file
+                )
+
+            messages.success(request, 'Offer letter uploaded successfully')
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Offer letter uploaded successfully!'
+            })
+        
+        return JsonResponse({
+            'status': 'error',
+            'message': 'No document provided.'
+        }, status=400)
+        
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error uploading offer letter: {str(e)}'
+        }, status=400)
+
+
+@login_required
 def generate_student_graph(request):
-    # Get passout years with student count
     passout_years = PassoutYear.objects.annotate(
         student_count=Count('placement_details')
     ).order_by('year')
 
-    # Prepare data for plotting
     years = [str(year.year) for year in passout_years]
     student_counts = [year.student_count for year in passout_years]
 
-    # Create the plot
     plt.figure(figsize=(10, 6))
     bar_width = 0.7
     bar_spacing = 0.1
@@ -865,18 +970,14 @@ def generate_student_graph(request):
     plt.ylabel('Number of Students', fontsize=12)
     plt.tight_layout()
 
-    # Save plot to a bytes buffer
     buffer = io.BytesIO()
     plt.savefig(buffer, format='png')
     buffer.seek(0)
     graph_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
     plt.close()
 
-    context = {
-        'graph': graph_base64
-    }
+    context = {'graph': graph_base64}
     return render(request, 'adminpage/student_graph.html', context)
-
 
 @login_required
 def higher_studies_view(request):

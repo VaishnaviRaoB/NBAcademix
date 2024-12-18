@@ -97,8 +97,8 @@ class PerformanceChart(models.Model):
 
 
 class PassoutYear(models.Model):
-    year = models.PositiveIntegerField(unique=True)
-
+    year = models.IntegerField(unique=True)
+    
     def __str__(self):
         return str(self.year)
 
@@ -109,9 +109,18 @@ class PlacementDetails(models.Model):
     ctc = models.DecimalField(max_digits=10, decimal_places=2)
     other_details = models.TextField(blank=True, null=True)
     passout_year = models.ForeignKey(PassoutYear, on_delete=models.CASCADE, related_name='placement_details')
-    offer_letter = models.FileField(upload_to='offer_letters/', null=True, blank=True)
+    
     def __str__(self):
         return f"{self.name} - {self.company_name}"
+
+class OfferLetter(models.Model):
+    placement = models.OneToOneField(PlacementDetails, on_delete=models.CASCADE, related_name='offer_letter')
+    document = models.FileField(upload_to='offer_letters/')
+    upload_date = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.original_filename or os.path.basename(self.document.name)
+
     
 class HigherStudy(models.Model):
     batch_year = models.CharField(max_length=9)  # e.g., 2013-2020
