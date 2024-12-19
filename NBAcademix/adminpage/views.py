@@ -795,7 +795,7 @@ def placement_year_details(request, year_id):
     return render(request, 'adminpage/placement_year_details.html', context)
 
 # Add Placement Details
-@login_required
+
 @login_required
 @require_http_methods(["POST"])
 def add_placement_details(request, year_id):
