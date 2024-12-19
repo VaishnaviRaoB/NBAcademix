@@ -1,38 +1,181 @@
 {% extends 'adminpage/base.html' %}
+{% load static %}
+
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-10">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="text-center">Student Count by Passout Year</h3>
-                </div>
-                <div class="card-body text-center">
-                    <img src="data:image/png;base64,{{ graph }}" alt="Student Count Graph" class="img-fluid" id="student-graph">
-                </div>
-            </div>
-            <div class="text-center mt-3">
-                <a href="{% url 'placement_home' %}" class="btn btn-secondary me-2">Back to Placement Home</a>
-                <button id="download-graph" class="btn btn-primary">Download Graph</button>
+<div class="modal-content chart-modal-content">
+    <div class="modal-header">
+        <h3>Student Count by Passout Year</h3>
+        <div class="modal-actions">
+            <button id="download-graph" class="btn chart-download-btn">
+                <i class="fas fa-download"></i> Download Chart
+            </button>
+            <span class="close">×</span>
+        </div>
+    </div>
+    <div class="modal-body chart-modal-body">
+        <div class="chart-summary-content">
+            <div class="chart-summary-image">
+                <img src="data:image/png;base64,{{ graph }}" alt="Student Count Graph" id="student-graph">
             </div>
         </div>
     </div>
 </div>
 
+<style>
+.modal-content {
+    background-color: white;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 1000px;
+    max-height: 80%;
+    overflow-y: auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+    margin: 40px auto;
+}
+
+.chart-modal-content {
+    width: 90%;
+    max-width: 1200px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background-color: #f4f4f4;
+    border-bottom: 1px solid #ddd;
+    
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: black;
+    font-weight: bold;
+    font-size: 24px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    
+}
+
+.close {
+    font-size: 24px;
+    cursor: pointer;
+    color: #800000;
+}
+
+.close:hover {
+    color: #600000;
+}
+
+.chart-download-btn {
+    background-color: #28a745;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.chart-download-btn:hover {
+    background-color: #218838;
+    text-decoration: none;
+    color: white;
+}
+
+.modal-body {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.chart-modal-body {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.chart-summary-content {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    justify-content: center;
+}
+
+.chart-summary-image {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.chart-summary-image img {
+    max-width: 100%;
+    max-height: 400px;  /* Changed from 600px to 400px to match performance page */
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* Background Style */
+body {
+    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),
+    url('{% static "smvitm.jpg" %}') no-repeat center center;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 20px auto;
+    }
+
+    .modal-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+
+    .modal-actions {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .chart-summary-content {
+        flex-direction: column;
+    }
+}
+</style>
+
 <script>
 document.getElementById('download-graph').addEventListener('click', function() {
-    // Get the image source
     var imgSrc = document.getElementById('student-graph').src;
-    
-    // Create a temporary link element
     var downloadLink = document.createElement('a');
     downloadLink.href = imgSrc;
     downloadLink.download = 'student_count_graph.png';
-    
-    // Append to the body, click, and remove
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);
+});
+
+// Add click handler for the close button
+document.querySelector('.close').addEventListener('click', function() {
+    window.location.href = "{% url 'placement_home' %}";
 });
 </script>
 {% endblock %}
