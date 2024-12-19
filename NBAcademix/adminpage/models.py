@@ -118,6 +118,11 @@ class OfferLetter(models.Model):
     document = models.FileField(upload_to='offer_letters/')
     upload_date = models.DateTimeField(auto_now_add=True)
     
+    @property
+    def filename(self):
+        # Returns just the filename without the path
+        return os.path.basename(self.document.name)
+
     def __str__(self):
         return self.original_filename or os.path.basename(self.document.name)
 

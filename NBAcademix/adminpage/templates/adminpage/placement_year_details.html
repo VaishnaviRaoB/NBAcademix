@@ -99,8 +99,7 @@
                         <i class="fas fa-file-alt"></i>
                     </div>
                     <div class="document-info">
-                        <p class="document-name">{{ detail.offer_letter.document.name }}</p>
-                        <p class="document-upload-date">Uploaded on: {{ detail.offer_letter.upload_date|date:"d M Y, h:i A" }}</p>
+                        <p class="document-name">{{ detail.offer_letter.filename }}</p>
                         <div class="document-actions">
                             <a href="{{ detail.offer_letter.document.url }}" target="_blank" class="btn view-btn">
                                 <i class="fas fa-eye"></i> View
@@ -117,6 +116,9 @@
                                 </button>
                             </form>
                         </div>
+                        <div class="document-date">
+                            Uploaded: {{ detail.offer_letter.upload_date|date:"d/m/Y H:i" }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -129,7 +131,6 @@
         </table>
     </div>
 
-    <!-- Edit Modal -->
     <div id="editModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -140,21 +141,33 @@
                 <form id="editForm" method="post" class="edit-form">
                     {% csrf_token %}
                     <input type="hidden" id="editId" name="id">
-                    <div class="form-group">
-                        <input type="text" id="editName" name="name" placeholder="Enter name" required class="form-input">
-                        <input type="text" id="editUsn" name="usn" placeholder="Enter USN" required class="form-input">
-                        <input type="text" id="editCompany" name="company_name" placeholder="Enter company name" required class="form-input">
-                        <input type="number" id="editCtc" name="ctc" placeholder="Enter CTC" required class="form-input">
-                        <button type="submit" class="btn update-btn">
-                            <i class="fas fa-save"></i> Save Changes
-                        </button>
+                    <div class="form-group-modal">
+                        <div class="input-group">
+                            <label for="editName">Student Name</label>
+                            <input type="text" id="editName" name="name" required class="form-input">
+                        </div>
+                        <div class="input-group">
+                            <label for="editUsn">USN</label>
+                            <input type="text" id="editUsn" name="usn" required class="form-input">
+                        </div>
+                        <div class="input-group">
+                            <label for="editCompany">Company Name</label>
+                            <input type="text" id="editCompany" name="company_name" required class="form-input">
+                        </div>
+                        <div class="input-group">
+                            <label for="editCtc">CTC</label>
+                            <input type="number" id="editCtc" name="ctc" required class="form-input">
+                        </div>
+                        <div class="button-group">
+                            <button type="submit" class="btn save-btn">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-</div>
-
 <style>
 /* Global Styles */
 html, body {
@@ -423,20 +436,62 @@ h2 {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
 }
 
 .modal-content {
     background-color: white;
     border-radius: 8px;
-    width: 80%;
-    max-width: 1000px;
-    max-height: 80%;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     position: relative;
+    margin: auto;
+}
+
+.form-group-modal {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-group label {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+.button-group {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    width: 100%;
+}
+
+/* New save button styling */
+.save-btn {
+    background-color: #800000;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.save-btn:hover {
+    background-color: #600000;
 }
 
 .modal-header {
@@ -558,7 +613,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Edit modal functionality
+    // Updated Edit Modal Functions
     window.openEditModal = function(id, name, usn, company, ctc) {
         const editModal = document.getElementById('editModal');
         const editForm = document.getElementById('editForm');
@@ -570,38 +625,56 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('editCtc').value = ctc;
         
         editForm.action = `/update_placement_details/${id}/`;
-        editModal.style.display = 'block';
+        editModal.style.display = 'flex';
     };
 
     window.closeEditModal = function() {
         document.getElementById('editModal').style.display = 'none';
     };
 
-    // Document modal functionality
-// Update these functions in your existing JavaScript
-window.openDocumentModal = function(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'flex';  // Changed from 'block' to 'flex'
-    }
-};
-
-window.closeDocumentModal = function(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'none';
-    }
-};
-
-// Add click outside to close
-document.addEventListener('click', function(event) {
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        if (event.target === modal) {
-            modal.style.display = 'none';
+    // Updated Edit Form Submission
+    document.getElementById('editForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!validateEditForm()) {
+            return;
         }
+
+        const formData = new FormData(this);
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
+        const id = document.getElementById('editId').value;
+
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+        submitBtn.disabled = true;
+
+        fetch(`/update_placement_details/${id}/`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showNotification('Success!', 'Details updated successfully!', 'success', 3000);
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showNotification('Error!', data.message || 'Error updating details.', 'danger', 3000);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error!', 'An error occurred while updating details.', 'danger', 3000);
+        })
+        .finally(() => {
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.disabled = false;
+            closeEditModal();
+        });
     });
-});
 
     // Handle add placement form submission
     const addPlacementForm = document.getElementById('addPlacementForm');
@@ -648,48 +721,6 @@ document.addEventListener('click', function(event) {
         });
     }
 
-    // Handle edit form submission
-    document.getElementById('editForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        if (!validateForm()) {
-            return;
-        }
-
-        const formData = new FormData(this);
-        const submitBtn = this.querySelector('button[type="submit"]');
-        const originalBtnText = submitBtn.innerHTML;
-
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
-        submitBtn.disabled = true;
-
-        fetch(this.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                showNotification('Success!', 'Details updated successfully!', 'success', 3000);
-                setTimeout(() => location.reload(), 1500);
-            } else {
-                showNotification('Error!', data.message || 'Error updating details.', 'danger', 3000);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('Error!', 'An error occurred while updating details.', 'danger', 3000);
-        })
-        .finally(() => {
-            submitBtn.innerHTML = originalBtnText;
-            submitBtn.disabled = false;
-        });
-    });
-
     // Handle delete forms
     document.querySelectorAll('.delete-form').forEach(form => {
         form.addEventListener('submit', function(e) {
@@ -717,13 +748,13 @@ document.addEventListener('click', function(event) {
                         setTimeout(() => location.reload(), 1500);
                     } else {
                         showNotification('Error!', data.message || 'Error deleting record.', 'danger', 3000);
-                        deleteBtn.innerHTML = originalBtnText;
-                        deleteBtn.disabled = false;
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     showNotification('Error!', 'An error occurred while deleting the record.', 'danger', 3000);
+                })
+                .finally(() => {
                     deleteBtn.innerHTML = originalBtnText;
                     deleteBtn.disabled = false;
                 });
@@ -731,23 +762,22 @@ document.addEventListener('click', function(event) {
         });
     });
 
-    // Modal management
-    document.querySelectorAll('.modal-trigger').forEach(trigger => {
-        trigger.addEventListener('click', function() {
-            const modalId = this.getAttribute('data-modal-id');
-            const modal = document.getElementById(modalId);
-            if (modal) modal.style.display = 'block';
-        });
-    });
+    // Document Modal Functions
+    window.openDocumentModal = function(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    };
 
-    document.querySelectorAll('.modal-close').forEach(closeBtn => {
-        closeBtn.addEventListener('click', function() {
-            const modal = this.closest('.modal');
-            if (modal) modal.style.display = 'none';
-        });
-    });
+    window.closeDocumentModal = function(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    };
 
-    // Close modals by clicking outside
+    // Close modals when clicking outside
     window.addEventListener('click', function(event) {
         document.querySelectorAll('.modal').forEach(modal => {
             if (event.target === modal) {
@@ -804,6 +834,36 @@ function validateForm() {
     const usnInput = document.querySelector('input[name="usn"]');
     const companyInput = document.querySelector('input[name="company_name"]');
     const ctcInput = document.querySelector('input[name="ctc"]');
+
+    let isValid = true;
+    let errorMessage = '';
+
+    if (!nameInput.value.trim()) {
+        errorMessage = 'Please enter a name.';
+        isValid = false;
+    } else if (!usnInput.value.trim()) {
+        errorMessage = 'Please enter a USN.';
+        isValid = false;
+    } else if (!companyInput.value.trim()) {
+        errorMessage = 'Please enter a company name.';
+        isValid = false;
+    } else if (!ctcInput.value || parseFloat(ctcInput.value) <= 0) {
+        errorMessage = 'Please enter a valid CTC.';
+        isValid = false;
+    }
+
+    if (!isValid) {
+        showNotification('Error!', errorMessage, 'danger', 3000);
+    }
+
+    return isValid;
+}
+
+function validateEditForm() {
+    const nameInput = document.getElementById('editName');
+    const usnInput = document.getElementById('editUsn');
+    const companyInput = document.getElementById('editCompany');
+    const ctcInput = document.getElementById('editCtc');
 
     let isValid = true;
     let errorMessage = '';
