@@ -117,7 +117,7 @@ class OfferLetter(models.Model):
     placement = models.OneToOneField(PlacementDetails, on_delete=models.CASCADE, related_name='offer_letter')
     document = models.FileField(upload_to='offer_letters/')
     upload_date = models.DateTimeField(auto_now_add=True)
-    
+    original_filename = models.CharField(max_length=255)
     @property
     def filename(self):
         # Returns just the filename without the path

@@ -10,6 +10,7 @@ import re
 from django.core.exceptions import ValidationError
 from django.views.decorators.http import require_http_methods
 from django.db.models import Q
+from django.views.decorators.csrf import csrf_exempt
 from django.dispatch import receiver
 from django.db.models import Count
 from django.db.models.signals import post_delete
@@ -853,11 +854,14 @@ def delete_offer_letter(request, id):
             return JsonResponse({'status': 'error', 'message': 'Record not found'})
     return JsonResponse({'status': 'error', 'message': 'Invalid request'})
 
+
+
 @login_required
+@csrf_exempt  # Ensure CSRF tokens are not an issue (remove this if you already handle CSRF correctly)
 def update_placement_details(request, id):
     if request.method == 'POST':
         try:
-            placement = PlacementDetails.objects.get(id=id)
+            placement = get_object_or_404(PlacementDetails, id=id)
             placement.name = request.POST.get('name')
             placement.usn = request.POST.get('usn')
             placement.company_name = request.POST.get('company_name')
@@ -866,7 +870,8 @@ def update_placement_details(request, id):
             return JsonResponse({'status': 'success', 'message': 'Details updated successfully'})
         except PlacementDetails.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Record not found'})
-    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+
         
 @login_required
 def delete_passout_year(request, year_id):

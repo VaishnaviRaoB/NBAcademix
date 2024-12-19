@@ -614,67 +614,109 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Updated Edit Modal Functions
-    window.openEditModal = function(id, name, usn, company, ctc) {
-        const editModal = document.getElementById('editModal');
-        const editForm = document.getElementById('editForm');
-        
-        document.getElementById('editId').value = id;
-        document.getElementById('editName').value = name;
-        document.getElementById('editUsn').value = usn;
-        document.getElementById('editCompany').value = company;
-        document.getElementById('editCtc').value = ctc;
-        
-        editForm.action = `/update_placement_details/${id}/`;
-        editModal.style.display = 'flex';
-    };
-
-    window.closeEditModal = function() {
-        document.getElementById('editModal').style.display = 'none';
-    };
-
-    // Updated Edit Form Submission
-    document.getElementById('editForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        if (!validateEditForm()) {
-            return;
+// Utility function to get the CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === name + '=') {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
         }
+    }
+    return cookieValue;
+}
 
-        const formData = new FormData(this);
-        const submitBtn = this.querySelector('button[type="submit"]');
-        const originalBtnText = submitBtn.innerHTML;
-        const id = document.getElementById('editId').value;
+// Function to open the edit modal and prefill it with the data
+window.openEditModal = function (id, name, usn, company, ctc) {
+    const editModal = document.getElementById('editModal');
+    const editForm = document.getElementById('editForm');
 
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
-        submitBtn.disabled = true;
+    // Prefill the form fields
+    document.getElementById('editId').value = id;
+    document.getElementById('editName').value = name;
+    document.getElementById('editUsn').value = usn;
+    document.getElementById('editCompany').value = company;
+    document.getElementById('editCtc').value = ctc;
 
-        fetch(`/update_placement_details/${id}/`, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
+    // Set the form action URL dynamically
+    editForm.action = `/placement/update/${id}/`;
+    editModal.style.display = 'flex';
+};
+
+// Function to close the edit modal
+window.closeEditModal = function () {
+    const editModal = document.getElementById('editModal');
+    editModal.style.display = 'none';
+};
+
+// Form validation function
+function validateEditForm() {
+    const name = document.getElementById('editName').value.trim();
+    const usn = document.getElementById('editUsn').value.trim();
+    const company = document.getElementById('editCompany').value.trim();
+    const ctc = document.getElementById('editCtc').value.trim();
+
+    if (!name || !usn || !company || !ctc) {
+        alert('All fields are required.');
+        return false;
+    }
+
+    if (isNaN(ctc) || Number(ctc) <= 0) {
+        alert('CTC must be a positive number.');
+        return false;
+    }
+
+    return true;
+}
+
+// Handle form submission
+document.getElementById('editForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    // Validate the form before proceeding
+    if (!validateEditForm()) {
+        return;
+    }
+
+    const formData = new FormData(this);
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+    const id = document.getElementById('editId').value;
+
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+    submitBtn.disabled = true;
+
+    // Send the POST request to update the placement details
+    fetch(`/placement/update/${id}/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'), // Include the CSRF token
+        },
+    })
+        .then((response) => response.json())
+        .then((data) => {
             if (data.status === 'success') {
-                showNotification('Success!', 'Details updated successfully!', 'success', 3000);
-                setTimeout(() => location.reload(), 1500);
+                // Redirect to the placement details page after success
+                window.location.href = '/placement/home/';
             } else {
-                showNotification('Error!', data.message || 'Error updating details.', 'danger', 3000);
+                alert(data.message || 'Error updating details.');
             }
         })
-        .catch(error => {
+        .catch((error) => {
             console.error('Error:', error);
-            showNotification('Error!', 'An error occurred while updating details.', 'danger', 3000);
+            alert('An error occurred while updating details.');
         })
         .finally(() => {
             submitBtn.innerHTML = originalBtnText;
             submitBtn.disabled = false;
-            closeEditModal();
         });
-    });
+});
+
 
     // Handle add placement form submission
     const addPlacementForm = document.getElementById('addPlacementForm');
@@ -721,55 +763,46 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    
-    // Find and replace the existing delete form handler code with this updated version:
-document.querySelectorAll('.delete-form').forEach(form => {
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const deleteBtn = this.querySelector('button[type="submit"]');
-        const originalBtnText = deleteBtn.innerHTML;
-        
-        deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
-        deleteBtn.disabled = true;
+    // Handle delete forms
+    document.querySelectorAll('.delete-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
 
-        fetch(this.action, {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': getCookie('csrftoken')
+            if (confirm('Are you sure you want to delete this record? This action cannot be undone.')) {
+                const deleteBtn = this.querySelector('button[type="submit"]');
+                const originalBtnText = deleteBtn.innerHTML;
+
+                deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+                deleteBtn.disabled = true;
+
+                fetch(this.action, {
+                    method: 'POST',
+                    body: new FormData(this),
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showNotification('Success!', 'Record deleted successfully!', 'success', 3000);
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showNotification('Error!', data.message || 'Error deleting record.', 'danger', 3000);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Error!', 'An error occurred while deleting the record.', 'danger', 3000);
+                })
+                .finally(() => {
+                    deleteBtn.innerHTML = originalBtnText;
+                    deleteBtn.disabled = false;
+                });
             }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.status === 'success') {
-                showNotification('Success!', 'Record deleted successfully!', 'success', 3000);
-                // Find and remove the closest table row
-                const row = form.closest('tr');
-                if (row) {
-                    row.remove();
-                } else {
-                    location.reload();
-                }
-            } else {
-                throw new Error(data.message || 'Error deleting record');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('Error!', error.message || 'An error occurred while deleting the record.', 'danger', 3000);
-        })
-        .finally(() => {
-            deleteBtn.innerHTML = originalBtnText;
-            deleteBtn.disabled = false;
         });
     });
-});
 
     // Document Modal Functions
     window.openDocumentModal = function(modalId) {
