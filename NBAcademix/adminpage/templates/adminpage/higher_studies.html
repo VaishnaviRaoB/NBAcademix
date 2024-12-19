@@ -496,5 +496,19 @@
             const alertMessage = document.getElementById("alert-message");
             if (alertMessage) alertMessage.classList.add("hidden");
         }, 3000);
+        // Search Functionality
+document.getElementById('searchInput').addEventListener('input', function() {
+    const searchValue = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#studentTableBody .performance-row');
+
+    rows.forEach(row => {
+        const batchYear = row.querySelector('td:first-child').textContent.toLowerCase();
+        if (batchYear.includes(searchValue)) {
+            row.style.display = ''; // Show the row
+        } else {
+            row.style.display = 'none'; // Hide the row
+        }
+    });
+});
     </script>
     {% endblock %}
