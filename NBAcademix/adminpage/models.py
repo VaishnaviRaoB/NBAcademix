@@ -85,13 +85,16 @@ class PerformanceChart(models.Model):
     
     # Core metrics
     avg_cgpa = models.FloatField(null=True)
+    max_cgpa = models.FloatField(null=True)
+    min_cgpa = models.FloatField(null=True)
     total_students = models.IntegerField(default=0)
     total_cgpa = models.FloatField(null=True)
     detained_count = models.IntegerField(default=0)
-
-    # Store semester-wise averages dynamically
-    semester_averages = models.JSONField(null=True, blank=True)
-
+    
+    # Store semester-wise metrics and overall SGPA stats
+    semester_averages = models.JSONField(null=True, blank=True)  # Now includes min/max for each semester
+    overall_sgpa_stats = models.JSONField(null=True, blank=True)  # Stores overall SGPA statistics
+    
     def __str__(self):
         return f"Performance Chart - {self.performance.academic_year}"
 
