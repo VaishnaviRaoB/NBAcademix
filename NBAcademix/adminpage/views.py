@@ -270,6 +270,26 @@ def delete_performance(request, document_id):
     messages.success(request, "Document deleted successfully.")
     return redirect('student_performance')
 
+@login_required
+def update_performance(request, performance_id):
+    performance = get_object_or_404(StudentPerformance, id=performance_id)
+    
+    if request.method == 'POST':
+        academic_year_in = request.POST.get('academic_year_in')
+        academic_year = request.POST.get('academic_year')
+        
+        if academic_year and academic_year_in:
+            try:
+                performance.academic_year_in = academic_year_in
+                performance.academic_year = academic_year
+                performance.save()
+                messages.success(request, f'Performance record updated successfully.')
+            except Exception as e:
+                messages.error(request, f'Error updating performance record: {str(e)}')
+        else:
+            messages.error(request, 'Please provide all required information.')
+    
+    return redirect('student_performance')
 
 @login_required
 def upload_performance_file(request, performance_id):

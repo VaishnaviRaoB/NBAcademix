@@ -11,6 +11,7 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     path('delete-account/', views.delete_account, name='delete_account'), 
     path('student-performance/', views.student_performance_view, name='student_performance'),
+    path('update-performance/<int:performance_id>/', views.update_performance, name='update_performance'),
     path('upload-performance-file/<int:performance_id>/', views.upload_performance_file, name='upload_performance_file'),
     path('delete_performance/<int:performance_id>/', views.delete_performance, name='delete_performance'),
     path('delete_performance_file/<int:document_id>/', views.delete_performance_file, name='delete_performance_file'),

@@ -94,7 +94,9 @@
                                     {% endif %}
                                 </div>
                             {% endif %}
-
+                            <button type="button" class="btn update-btn" onclick="openUpdateModal('update-modal-{{ performance.id }}')">
+                                <i class="fas fa-edit"></i> Update
+                            </button>
                             <!-- Delete Form -->
                             <form method="post" action="{% url 'delete_performance' performance.id %}" class="delete-form" onsubmit="return confirm('Are you sure you want to delete this entire record? This will also delete all associated documents.');">
                                 {% csrf_token %}
@@ -156,6 +158,32 @@
         {% endif %}
     {% endfor %}
 
+    {% for performance in performances %}
+    <div id="update-modal-{{ performance.id }}" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Update Performance Details</h2>
+                <span class="close" onclick="closeUpdateModal('update-modal-{{ performance.id }}')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'update_performance' performance.id %}">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="academic_year_in">Year</label>
+                        <input type="text" name="academic_year_in" value="{{ performance.academic_year_in }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="academic_year">Academic Year</label>
+                        <input type="text" name="academic_year" value="{{ performance.academic_year }}" required>
+                    </div>
+                    <button type="submit" class="btn save-btn">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
     <!-- Chart Modals (Existing chart modal code remains the same) -->
     {% for performance in performances %}
     {% if performance.performance_chart and performance.performance_chart.chart_image %}
@@ -596,12 +624,15 @@ h2 {
 .modal-content {
     background-color: white;
     border-radius: 8px;
-    width: 80%;
+    width: 40%;
     max-width: 1000px;
     max-height: 80%;
     overflow-y: auto;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     position: relative;
+    padding: 2rem;
+    top:10rem;
+    left:25rem;
 }
 
 .modal-header {
@@ -612,7 +643,9 @@ h2 {
     background-color: #f4f4f4;
     border-bottom: 1px solid #ddd;
 }
-
+.modal-header > h2{
+    color: #600000;
+}
 .modal-actions {
     display: flex;
     gap: 10px;
@@ -629,6 +662,47 @@ h2 {
     color: #600000;
 }
 
+.update-btn {
+    background-color: #ffc107;
+    color: #000;
+    border: none;
+    padding: 5px 10px;
+    margin: 0 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    height: 2.2rem;
+}
+
+.update-btn:hover {
+    background-color: #ffb300;
+}
+
+.save-btn {
+    background-color:#600000;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 15px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
 /* Chart Modal Specific Styles */
 .chart-modal {
     z-index: 1500;
@@ -824,5 +898,20 @@ h2 {
             }
         });
     });
+    
+function openUpdateModal(modalId) {
+    document.getElementById(modalId).style.display = "block";
+}
+
+function closeUpdateModal(modalId) {
+    document.getElementById(modalId).style.display = "none";
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = "none";
+    }
+}
 </script>
 {% endblock %}
