@@ -359,7 +359,24 @@ def student_list_view(request):
         'student_lists': student_lists,
     }
     return render(request, 'adminpage/student_list.html', context)
-
+@login_required
+def update_student_list(request, list_id):
+    student_list = get_object_or_404(StudentList, id=list_id)
+    
+    if request.method == 'POST':
+        new_batch_year = request.POST.get('new_batch_year')
+        
+        if new_batch_year:
+            try:
+                student_list.batch_year = new_batch_year
+                student_list.save()
+                messages.success(request, f'Batch year updated successfully to {new_batch_year}')
+            except Exception as e:
+                messages.error(request, f'Error updating batch year: {str(e)}')
+        else:
+            messages.error(request, 'Please provide a new batch year.')
+            
+    return redirect('student_list')
 @login_required
 def delete_student_list(request, list_id):
     student_list = get_object_or_404(StudentList, id=list_id)

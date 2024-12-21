@@ -47,8 +47,10 @@
                                     <i class="fas fa-eye"></i> View Documents
                                 </button>
                             {% endif %}
-
-                            <form method="post" action="{% url 'upload_student_file' student_list.id %}" enctype="multipart/form-data" class="upload-form">
+                            <button type="button" class="btn edit-btn update-btn" onclick="openUpdateModal('{{ student_list.id }}', '{{ student_list.batch_year }}')">
+                        <i class="fas fa-edit"></i> Update
+                    </button>
+                            <form method="post" action="{% url 'upload_student_file' student_list.id %}" enctype="multipart/form-data" class="upload-form" class="updatebtn">
                                 {% csrf_token %}
                                 <input type="file" name="document" accept=".pdf,.doc,.docx,.xls,.xlsx" class="file-input" required>
                                 <button type="submit" class="btn upload-btn">
@@ -69,6 +71,29 @@
         </table>
     </div>
 
+    <div id="updateModal" class="modal">
+        <div class="modal-content update-modal">
+            <div class="modal-header">
+                <h3>Update Student List</h3>
+                <span class="close" onclick="closeUpdateModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="updateForm" method="post" action="">
+                    {% csrf_token %}
+                    <div class="form-field">
+                        <label for="new_batch_year">Batch Year</label>
+                        <input type="text" id="new_batch_year" name="new_batch_year" required 
+                               class="modal-input" placeholder="Enter batch year">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn save-btn">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <!-- Document Modals -->
     {% for student_list in student_lists %}
         {% if student_list.documents.all %}
@@ -217,6 +242,9 @@ h2 {
     background-color: #800000;
     color: white;
 }
+.updatebtn{
+    color: yellow;
+}
 
 .add-btn:hover {
     background-color: #600000;
@@ -244,7 +272,87 @@ h2 {
     background-color: #dc3545;
     color: white;
 }
+.update-modal {
+    background: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    padding: 0;
+    margin: 10% auto;
+}
 
+.modal-header {
+    background: #800000;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: rgb(131, 20, 20);
+}
+
+.modal-header .close {
+    color: rgb(131, 20, 20);
+    opacity: 1;
+    font-size: 24px;
+    font-weight: normal;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.form-field {
+    margin-bottom: 20px;
+}
+
+.form-field label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #333;
+}
+
+.modal-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.modal-input:focus {
+    border-color: #800000;
+    outline: none;
+    box-shadow: 0 0 5px rgba(128, 0, 0, 0.2);
+}
+
+.modal-footer {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.save-btn {
+    background-color: #800000;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    width: auto;
+    display: inline-block;
+}
+
+.save-btn:hover {
+    background-color: #600000;
+}
 .delete-btn:hover {
     background-color: #c82333;
 }
@@ -388,7 +496,9 @@ h2 {
     font-size: 12px;
     color: #666;
 }
-
+.update-btn{
+    background-color: yellow;
+}
 /* Modal Styles */
 .modal {
     display: none;
@@ -509,5 +619,28 @@ h2 {
         }
     });
 });
+
+function openUpdateModal(studentId, currentBatchYear) {
+    const modal = document.getElementById('updateModal');
+    const form = document.getElementById('updateForm');
+    const input = document.getElementById('new_batch_year');
+    
+    form.action = `/update-student-list/${studentId}/`;
+    input.value = currentBatchYear;
+    modal.style.display = 'block';
+}
+
+function closeUpdateModal() {
+    const modal = document.getElementById('updateModal');
+    modal.style.display = 'none';
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('updateModal');
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+}
 </script>
 {% endblock %}

@@ -18,6 +18,7 @@ urlpatterns = [
     path('student-list/', views.student_list_view, name='student_list'),
     path('delete-student-list/<int:list_id>/', views.delete_student_list, name='delete_student_list'),
     path('upload-student-file/<int:list_id>/', views.upload_student_file, name='upload_student_file'),
+    path('update-student-list/<int:list_id>/', views.update_student_list, name='update_student_list'),
     path('download-student-files/<int:list_id>/', views.download_student_files, name='download_student_files'),
     path('delete-student-file/<int:document_id>/', views.delete_student_file, name='delete_student_file'),
     path('achievement/', views.achievement_view, name='achievement'),
