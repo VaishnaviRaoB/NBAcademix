@@ -30,6 +30,7 @@ urlpatterns = [
     path('generate-performance-chart/<int:document_id>/', views.generate_performance_chart, name='generate_performance_chart'),
     path('download-performance-chart/<int:performance_id>/', views.download_performance_chart, name='download_performance_chart'),
     path('placement/home/', views.placement_home, name='placement_home'),
+    path('update_passout_year/<int:year_id>/', views.update_passout_year, name='update_passout_year'),
     path('placement/add/<int:year_id>/', views.add_placement_details, name='add_placement_details'),
     path('placement/year/<int:year_id>/', views.placement_year_details, name='placement_year_details'),
     path('placement/delete_passout_year/<int:year_id>/', views.delete_passout_year, name='delete_passout_year'),

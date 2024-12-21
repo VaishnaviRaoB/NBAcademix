@@ -864,6 +864,26 @@ def placement_home(request):
         'passout_years': passout_years
     }
     return render(request, 'adminpage/placement_home.html', context)
+@login_required
+def update_passout_year(request, year_id):
+    try:
+        year_obj = PassoutYear.objects.get(id=year_id)
+        new_year = request.POST.get('year')
+        
+        if not new_year:
+            return JsonResponse({'success': False, 'error': 'Year is required'})
+        
+        # Check if the new year already exists for another record
+        if PassoutYear.objects.filter(year=new_year).exclude(id=year_id).exists():
+            return JsonResponse({'success': False, 'error': 'This year already exists'})
+        
+        year_obj.year = new_year
+        year_obj.save()
+        return JsonResponse({'success': True})
+    except PassoutYear.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Year not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
 
 # Details for a specific passout year, including placement details
 @login_required
