@@ -479,7 +479,24 @@ def delete_achievement(request, achievement_id):
         messages.success(request, "Achievement deleted successfully")
         return redirect('achievement')
     return redirect('achievement')
-
+@login_required
+def update_achievement(request, achievement_id):
+    achievement = get_object_or_404(Achievement, id=achievement_id)
+    
+    if request.method == 'POST':
+        event_name = request.POST.get('event_name')
+        
+        if event_name:
+            try:
+                achievement.event_name = event_name
+                achievement.save()
+                messages.success(request, f'Achievement updated successfully.')
+            except Exception as e:
+                messages.error(request, f'Error updating achievement: {str(e)}')
+        else:
+            messages.error(request, 'Please provide event name.')
+            
+    return redirect('achievement')
 @login_required
 def upload_achievement_file(request, achievement_id):
     try:
@@ -1076,6 +1093,24 @@ def upload_higher_study_file(request, higher_study_id):
         
     return redirect('higher_studies')
 
+@login_required
+def update_higher_study(request, higher_study_id):
+    higher_study = get_object_or_404(HigherStudy, id=higher_study_id)
+    
+    if request.method == 'POST':
+        batch_year = request.POST.get('batch_year')
+        
+        if batch_year:
+            try:
+                higher_study.batch_year = batch_year
+                higher_study.save()
+                messages.success(request, 'Higher Study record updated successfully.')
+            except Exception as e:
+                messages.error(request, f'Error updating higher study record: {str(e)}')
+        else:
+            messages.error(request, 'Please provide batch year.')
+            
+    return redirect('higher_studies')
 @login_required
 def download_higher_study_files(request, higher_study_id):
     try:

@@ -55,7 +55,9 @@
                                     <i class="fas fa-upload"></i> Upload
                                 </button>
                             </form>
-
+                            <button type="button" class="btn update-btn" onclick="openUpdateModal('{{ achievement.id }}', '{{ achievement.event_name }}')">
+                                <i class="fas fa-edit"></i> Update
+                            </button>
                             <form method="post" action="{% url 'delete_achievement' achievement.id %}" class="delete-form" onsubmit="return confirm('Are you sure you want to delete this entire record?');">
                                 {% csrf_token %}
                                 <button type="submit" class="btn delete-btn">
@@ -70,6 +72,25 @@
     </div>
 
     <!-- Document Modals -->
+     
+<div id="updateModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Update Achievement Details</h2>
+            <span class="close" onclick="closeUpdateModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="updateForm" method="post" action="">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="event_name">Event Name</label>
+                    <input type="text" id="event_name" name="event_name" class="form-control" required>
+                </div>
+                <button type="submit" class="btn add-btn">Save Changes</button>
+            </form>
+        </div>
+    </div>
+</div>
     {% for achievement in achievements %}
         {% if achievement.documents.all %}
         <div id="modal-{{ achievement.id }}" class="modal document-modal">
@@ -413,7 +434,9 @@ h2 {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     position: relative;
 }
-
+.modal-header > h2{
+    color: #600000;
+}
 .modal-header {
     display: flex;
     justify-content: space-between;
@@ -432,7 +455,75 @@ h2 {
 .close:hover {
     color: #600000;
 }
+.update-btn {
+    background-color: yellow;
+    color: black;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 8px;
+}
 
+.update-btn:hover {
+    background-color: #45a049;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.4);
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 5px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: black;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
 /* Responsive Adjustments */
 @media (max-width: 768px) {
     .performance-container {
@@ -510,5 +601,31 @@ document.getElementById('searchInput').addEventListener('input', function() {
         }
     });
 });
+function openUpdateModal(achievementId, eventName) {
+    const modal = document.getElementById('updateModal');
+    const form = document.getElementById('updateForm');
+    const eventNameInput = document.getElementById('event_name');
+    
+    // Set the current values
+    eventNameInput.value = eventName;
+    
+    // Update the form action
+    form.action = `/update-achievement/${achievementId}/`;
+    
+    modal.style.display = 'block';
+}
+
+function closeUpdateModal() {
+    const modal = document.getElementById('updateModal');
+    modal.style.display = 'none';
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('updateModal');
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+}
 </script>
 {% endblock %}

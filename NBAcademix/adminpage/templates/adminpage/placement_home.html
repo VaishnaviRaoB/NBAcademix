@@ -48,6 +48,9 @@
                             <a href="{% url 'placement_year_details' year.id %}" class="btn view-btn">
                                 <i class="fas fa-eye"></i> View Details
                             </a>
+
+                            
+
                             <form method="post" action="{% url 'delete_passout_year' year.id %}" class="delete-form" onsubmit="return confirm('Are you sure you want to delete this passout year?');">
                                 {% csrf_token %}
                                 <button type="submit" class="btn delete-btn">

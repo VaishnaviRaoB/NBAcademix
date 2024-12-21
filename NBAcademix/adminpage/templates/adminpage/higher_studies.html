@@ -55,7 +55,9 @@
                                     <i class="fas fa-upload"></i> Upload
                                 </button>
                             </form>
-
+                            <button type="button" class="btn update-btn" onclick="openUpdateModal('update-modal-{{ higher_study.id }}')">
+                                <i class="fas fa-edit"></i> Update
+                            </button>
                             <form method="post" action="{% url 'delete_higher_study' higher_study.id %}" class="delete-form" onsubmit="return confirm('Are you sure you want to delete this entire record?');">
                                 {% csrf_token %}
                                 <button type="submit" class="btn delete-btn">
@@ -115,6 +117,30 @@
         </div>
         {% endif %}
     {% endfor %}
+    {% for higher_study in higher_studies %}
+    <div id="update-modal-{{ higher_study.id }}" class="modal update-modal">
+        <div class="modal-content update-modal-content">
+            <div class="modal-header">
+                <h2>Update Higher Study Details</h2>
+                <span class="close" onclick="closeUpdateModal('update-modal-{{ higher_study.id }}')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'update_higher_study' higher_study.id %}" class="update-form">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="batch_year">Batch Year</label>
+                        <input type="text" id="batch_year" name="batch_year" value="{{ higher_study.batch_year }}" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn save-btn">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endfor %}
 </div>
 
 <style>
@@ -422,6 +448,9 @@
         background-color: #f4f4f4;
         border-bottom: 1px solid #ddd;
     }
+    .modal-header > h2{
+        color: #600000;
+    }
     
     .close {
         font-size: 24px;
@@ -432,7 +461,74 @@
     .close:hover {
         color: #600000;
     }
-    
+    /* Add these styles to your CSS file */
+.update-btn {
+    background-color: yellow;
+    color: black;
+    border: none;
+    padding: 8px 16px;
+    margin: 0 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.update-btn:hover {
+    background-color: yellow;
+}
+
+.update-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.update-modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 8px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.form-actions {
+    text-align: right;
+    margin-top: 20px;
+}
+
+.save-btn {
+    background-color:#600000;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
     /* Responsive Adjustments */
     @media (max-width: 768px) {
         .performance-container {
@@ -510,5 +606,26 @@ document.getElementById('searchInput').addEventListener('input', function() {
         }
     });
 });
+// Add these functions to your JavaScript file
+function openUpdateModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = "block";
+    }
+}
+
+function closeUpdateModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = "none";
+    }
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    if (event.target.classList.contains('update-modal')) {
+        event.target.style.display = "none";
+    }
+}
     </script>
     {% endblock %}
