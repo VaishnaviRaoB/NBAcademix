@@ -278,34 +278,37 @@
         <a href="{% url 'homepage' %}" class="navbar-brand">
             <i class="fas fa-graduation-cap"></i>
             NBAcademix
-            <div class="navbar-right">
-                {% if user.is_authenticated %}
-                {% if request.resolver_match.url_name != 'homepage' %}
-                <!-- Check if the current page is placement_year_details and adjust the back button URL accordingly -->
-                <a href="{% if request.resolver_match.url_name == 'placement_year_details' %}{% url 'placement_home' %}{% else %}{% url 'homepage' %}{% endif %}" class="back-arrow">
-                    <i class="fas fa-arrow-left"></i> 
-                </a>
-                {% endif %}
-                {% if request.resolver_match.url_name != 'landing_page' and request.resolver_match.url_name != 'signup' and request.resolver_match.url_name != 'profile' %}
-                    <div class="user-menu" id="userMenu">
-                        <div class="user-icon" onclick="toggleUserMenu(event)">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div class="dropdown-content">
-                            <a href="{% url 'profile' %}">
-                                <i class="fas fa-user-circle"></i>
-                                Profile
-                            </a>
-                            <a href="{% url 'logout' %}">
-                                <i class="fas fa-sign-out-alt"></i>
-                                Logout
-                            </a>
-                        </div>
+        </a>
+        <div class="navbar-right">
+            {% if user.is_authenticated %}
+            {% if request.resolver_match.url_name != 'homepage' %}
+            
+        <!-- Check if the current page is placement_year_details and adjust the back button URL accordingly -->
+        <a href="{% if request.resolver_match.url_name == 'placement_year_details' %}{% url 'placement_home' %}{% else %}{% url 'homepage' %}{% endif %}" class="back-arrow">
+            <i class="fas fa-arrow-left"></i> 
+        </a>
+            {% endif %}
+            {% if request.resolver_match.url_name != 'landing_page' and request.resolver_match.url_name != 'signup' and request.resolver_match.url_name != 'profile' %}
+ 
+                <div class="user-menu" id="userMenu">
+                    <div class="user-icon" onclick="toggleUserMenu(event)">
+                        <i class="fas fa-user"></i>
                     </div>
+                    <div class="dropdown-content">
+                        <a href="{% url 'profile' %}">
+                            <i class="fas fa-user-circle"></i>
+                            Profile
+                        </a>
+                        <a href="{% url 'logout' %}">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Logout
+                        </a>
+                    </div>
+                </div>
                 {% endif %}
-                {% endif %}
-            </div>
-        </nav>
+            {% endif %}
+        </div>
+    </nav>
 
     <div class="container">
         {% if messages %}
