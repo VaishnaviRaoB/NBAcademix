@@ -18,7 +18,7 @@
         <form method="post" action="" class="add-form">
             {% csrf_token %}
             <div class="form-group">
-                <select name="academic_year_in" required class="form-select">
+                <select name="academic_year_in" required class="form-input">
                     <option value="" disabled selected>Select Year</option>
                     <option value="FIRST">FIRST YEAR</option>
                     <option value="SECOND">SECOND YEAR</option>
@@ -198,6 +198,7 @@
                     <span class="close" onclick="closeChartModal('chart-modal-{{ performance.id }}')">&times;</span>
                 </div>
             </div>
+            
             <div class="modal-body chart-modal-body">
                 <div class="chart-summary-content">
                     <div class="chart-summary-stats">
@@ -295,17 +296,20 @@ html, body {
     background-attachment: fixed;
 }
 
-/* Global Container Styles */
+/* Document Modal Styles */
 .document-modal-content {
     width: 90%;
     max-width: 1200px;
+    
 }
 
 .document-grid {
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
+    padding: 20px;
     justify-content: center;
+    
 }
 
 .document-card {
@@ -338,6 +342,10 @@ html, body {
     margin-bottom: 15px;
 }
 
+.document-actions a {
+    text-decoration: none;
+}
+
 .document-delete-actions {
     margin-bottom: 15px;
     display: flex;
@@ -358,7 +366,7 @@ html, body {
     background-color: #218838;
 }
 
-/* File input styling to hide default input */
+/* File input styling */
 .file-input {
     display: none;
 }
@@ -407,24 +415,23 @@ h2 {
 .form-group {
     display: flex;
     gap: 15px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: center;
     align-items: center;
 }
 
-.form-input, 
-.form-select {
+.form-input {
     padding: 10px 15px;
-    border: 1px solid black;
+    border: 2px solid black;
     border-radius: 4px;
     font-size: 14px;
     width: 250px;
     height: 40px;
     transition: all 0.3s ease;
+    background-color: white;
 }
 
-.form-input:focus,
-.form-select:focus {
+.form-input:focus {
     border-color: #800000;
     outline: none;
     box-shadow: 0 0 5px rgba(128, 0, 0, 0.3);
@@ -442,6 +449,8 @@ h2 {
     justify-content: center;
     gap: 8px;
     font-size: 14px;
+    border: 2px solid black;
+    text-decoration: none;
 }
 
 .add-btn {
@@ -624,15 +633,12 @@ h2 {
 .modal-content {
     background-color: white;
     border-radius: 8px;
-    width: 40%;
+    width: 80%;
     max-width: 1000px;
     max-height: 80%;
     overflow-y: auto;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     position: relative;
-    padding: 2rem;
-    top:10rem;
-    left:25rem;
 }
 
 .modal-header {
@@ -643,19 +649,22 @@ h2 {
     background-color: #f4f4f4;
     border-bottom: 1px solid #ddd;
 }
-.modal-header > h2{
-    color: #600000;
-}
+
 .modal-actions {
     display: flex;
-    gap: 10px;
     align-items: center;
+    gap: 15px;  /* Space between download button and close button */
 }
 
 .close {
     font-size: 24px;
     cursor: pointer;
     color: #800000;
+    padding: 0 5px;
+    line-height: 1;
+    height: 24px;
+    display: flex;
+    align-items: center;
 }
 
 .close:hover {
@@ -663,7 +672,7 @@ h2 {
 }
 
 .update-btn {
-    background-color: #ffc107;
+    background-color: yellow;
     color: #000;
     border: none;
     padding: 5px 10px;
@@ -671,10 +680,11 @@ h2 {
     border-radius: 4px;
     cursor: pointer;
     height: 2.2rem;
+    border: 2px solid black;
 }
 
 .update-btn:hover {
-    background-color: #ffb300;
+    background-color: orange;
 }
 
 .save-btn {
@@ -687,22 +697,6 @@ h2 {
     margin-top: 15px;
 }
 
-.form-group {
-    margin-bottom: 15px;
-    
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
 /* Chart Modal Specific Styles */
 .chart-modal {
     z-index: 1500;
@@ -730,13 +724,13 @@ h2 {
     align-items: center;
     gap: 5px;
     transition: all 0.3s ease;
-    text-decoration: none; 
+    text-decoration: none;
 }
 
 .chart-summary-content {
     display: flex;
-    gap: 20x;
-    align-items: center;
+    gap: 20px;
+    align-items: flex-start;
 }
 
 .chart-summary-stats {
@@ -767,14 +761,6 @@ h2 {
     font-weight: normal;
     color: #333;
 }
-
-/* Ensure responsiveness */
-@media (max-width: 768px) {
-    .chart-summary-stats table {
-        font-size: 14px;
-    }
-}
-
 
 .section-header {
     background-color: #800000;
@@ -843,7 +829,12 @@ h2 {
     .action-buttons {
         flex-direction: column;
     }
+
+    .chart-summary-stats table {
+        font-size: 14px;
+    }
 }
+
 </style>
 
 <script>

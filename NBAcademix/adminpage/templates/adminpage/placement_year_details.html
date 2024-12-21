@@ -89,7 +89,6 @@
                 <div id="doc-modal-{{ placement.id }}" class="modal document-modal">
                     <div class="modal-content document-modal-content">
                         <div class="modal-header">
-                            <h3>Document Details</h3>
                             <span class="close" onclick="closeDocumentModal('doc-modal-{{ placement.id }}')">&times;</span>
                         </div>
                         <div class="modal-body document-modal-body">
@@ -250,10 +249,10 @@ h2 {
 
 .form-input {
     padding: 10px 15px;
-    border: 1px solid black;
+    border: 2px solid black;
     border-radius: 4px;
     font-size: 14px;
-    width: 200px;
+    width: 250px;
     height: 40px;
     transition: all 0.3s ease;
 }
@@ -348,6 +347,7 @@ h2 {
     gap: 8px;
     font-size: 14px;
     height: 40px;
+    border: 2px solid black;
 }
 
 .add-btn {
@@ -383,8 +383,9 @@ h2 {
 }
 
 .update-btn:hover {
-    background-color: #e0a800;
+    background-color:  orange;
 }
+
 
 .delete-btn {
     background-color: #dc3545;
@@ -404,16 +405,20 @@ h2 {
     background-color: #218838;
 }
 
+/* Document Modal Styles */
 .document-modal-content {
     width: 90%;
     max-width: 1200px;
+    
 }
 
 .document-grid {
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
+    padding: 20px;
     justify-content: center;
+    
 }
 
 .document-card {
@@ -446,6 +451,10 @@ h2 {
     margin-bottom: 15px;
 }
 
+.document-actions a {
+    text-decoration: none;
+}
+
 .document-delete-actions {
     margin-bottom: 15px;
     display: flex;
@@ -457,7 +466,7 @@ h2 {
     color: #666;
 }
 
-/* Modal Styles */
+
 .modal {
     display: none;
     position: fixed;
@@ -466,22 +475,41 @@ h2 {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.7);
-    z-index: 1000;
     justify-content: center;
     align-items: center;
+    z-index: 1000;
 }
 
 .modal-content {
     background-color: white;
     border-radius: 8px;
-    width: 90%;
-    max-width: 500px;
-    max-height: 90vh;
+    width: 80%;
+    max-width: 1000px;
+    max-height: 80%;
     overflow-y: auto;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     position: relative;
-    margin: auto;
 }
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background-color: #f4f4f4;
+    border-bottom: 1px solid #ddd;
+}
+
+.close {
+    font-size: 24px;
+    cursor: pointer;
+    color: #800000;
+}
+
+.close:hover {
+    color: #600000;
+}
+
 
 .form-group-modal {
     display: flex;
@@ -522,25 +550,6 @@ h2 {
 
 .save-btn:hover {
     background-color: #600000;
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px;
-    background-color: #f4f4f4;
-    border-bottom: 1px solid #ddd;
-}
-
-.close {
-    font-size: 24px;
-    cursor: pointer;
-    color: #800000;
-}
-
-.close:hover {
-    color: #600000;
 }
 
 /* File Input */
