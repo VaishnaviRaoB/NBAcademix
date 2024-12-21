@@ -855,80 +855,47 @@ def placement_year_details(request, year_id):
 # Add Placement Details
 
 @login_required
-@require_http_methods(["POST"])
 def add_placement_details(request, year_id):
-    passout_year = get_object_or_404(PassoutYear, id=year_id)
-
-    name = request.POST.get('name')
-    usn = request.POST.get('usn')
-    company_name = request.POST.get('company_name')
-    ctc = request.POST.get('ctc')
-
-    if name and usn and company_name and ctc:
-        try:
-            # First create the placement details
-            placement_detail = PlacementDetails.objects.create(
+    try:
+        passout_year = get_object_or_404(PassoutYear, id=year_id)
+        if request.method == 'POST':
+            placement = PlacementDetails.objects.create(
                 passout_year=passout_year,
-                name=name,
-                usn=usn,
-                company_name=company_name,
-                ctc=ctc
+                name=request.POST.get('name'),
+                usn=request.POST.get('usn'),
+                company_name=request.POST.get('company_name'),
+                ctc=request.POST.get('ctc')
             )
-
-            # If an offer letter was uploaded, create it separately
-            if request.FILES.get('offer_letter'):
-                OfferLetter.objects.create(
-                    placement=placement_detail,
-                    document=request.FILES['offer_letter']
-                )
-
             return JsonResponse({
                 'status': 'success',
                 'message': 'Placement details added successfully!'
             })
-        except Exception as e:
-            return JsonResponse({
-                'status': 'error',
-                'message': str(e)
-            }, status=400)
-    else:
+    except Exception as e:
         return JsonResponse({
             'status': 'error',
-            'message': 'Missing required fields.'
+            'message': str(e)
         }, status=400)
 
 @login_required
-def delete_offer_letter(request, id):
-    if request.method == 'POST':
-        try:
-            placement = PlacementDetails.objects.get(id=id)
-            if placement.offer_letter:
-                # Delete the file
-                placement.offer_letter.delete()
-                placement.save()
-                return JsonResponse({'status': 'success', 'message': 'Offer letter deleted successfully'})
-        except PlacementDetails.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Record not found'})
-    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
-
-
-
-@login_required
-@csrf_exempt  # Ensure CSRF tokens are not an issue (remove this if you already handle CSRF correctly)
-def update_placement_details(request, id):
-    if request.method == 'POST':
-        try:
-            placement = get_object_or_404(PlacementDetails, id=id)
+def update_placement_details(request, placement_id):
+    try:
+        placement = get_object_or_404(PlacementDetails, id=placement_id)
+        if request.method == 'POST':
             placement.name = request.POST.get('name')
             placement.usn = request.POST.get('usn')
             placement.company_name = request.POST.get('company_name')
             placement.ctc = request.POST.get('ctc')
             placement.save()
-            return JsonResponse({'status': 'success', 'message': 'Details updated successfully'})
-        except PlacementDetails.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Record not found'})
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
-
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Placement details updated successfully!'
+            })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)
         
 @login_required
 def delete_passout_year(request, year_id):
@@ -956,45 +923,30 @@ def get_placement_for_edit(request, pk):
 
 # Delete Placement Details
 @login_required
-@require_http_methods(["POST"])
 def delete_placement_details(request, placement_id):
-    try:
-        placement_detail = get_object_or_404(PlacementDetails, id=placement_id)
-        
-        # The associated OfferLetter will be deleted automatically due to CASCADE
-        placement_detail.delete()
-        
-        return JsonResponse({
-            'status': 'success',
-            'message': 'Placement details deleted successfully!'
-        })
-    except Exception as e:
-        return JsonResponse({
-            'status': 'error',
-            'message': f'Error deleting placement details: {str(e)}'
-        }, status=400)
+    placement = get_object_or_404(PlacementDetails, id=placement_id)
+    passout_year = placement.passout_year  # Get the associated PassoutYear for redirection
+    placement.delete()
+    return redirect('placement_year_details', year_id=passout_year.id)  # Redirect to placement_year_details
+
 
 @login_required
 def upload_offer_letter(request, placement_id):
     try:
         placement = get_object_or_404(PlacementDetails, id=placement_id)
-
+        
         if request.method == 'POST' and request.FILES.get('document'):
             uploaded_file = request.FILES['document']
             
-            # Check if an offer letter already exists
             if hasattr(placement, 'offer_letter'):
-                # Update existing offer letter
                 placement.offer_letter.document = uploaded_file
                 placement.offer_letter.save()
             else:
-                # Create new offer letter
                 OfferLetter.objects.create(
                     placement=placement,
                     document=uploaded_file
                 )
-
-            messages.success(request, 'Offer letter uploaded successfully')
+            
             return JsonResponse({
                 'status': 'success',
                 'message': 'Offer letter uploaded successfully!'
@@ -1011,11 +963,19 @@ def upload_offer_letter(request, placement_id):
             'message': f'Error uploading offer letter: {str(e)}'
         }, status=400)
 
+@login_required
+def delete_offer_letter(request, offer_id):
+    offer_letter = get_object_or_404(OfferLetter, id=offer_id)
+    placement = offer_letter.placement  # Get the associated placement
+    passout_year = placement.passout_year  # Get the passout year from placement
+    offer_letter.delete()
+    return redirect('placement_year_details', year_id=passout_year.id)  # Redirect to placement_year_details
 
+    
 @login_required
 def generate_student_graph(request):
     passout_years = PassoutYear.objects.annotate(
-        student_count=Count('placement_details')
+        student_count=Count('placement_details',)
     ).order_by('year')
 
     years = [str(year.year) for year in passout_years]
