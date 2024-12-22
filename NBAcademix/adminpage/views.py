@@ -990,11 +990,19 @@ def update_placement_details(request, placement_id):
             placement.company_name = request.POST.get('company_name')
             placement.ctc = request.POST.get('ctc')
             placement.save()
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'success'})
+            
             messages.success(request, 'Placement details updated successfully.')
+            return redirect('placement_year_details', year_id=placement.passout_year.id)
     except Exception as e:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': str(e)})
         messages.error(request, f'Error updating placement details: {str(e)}')
+    
     return redirect('placement_year_details', year_id=placement.passout_year.id)
-
+    
 @login_required
 def delete_passout_year(request, year_id):
     try:

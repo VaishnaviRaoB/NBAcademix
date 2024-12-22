@@ -142,9 +142,9 @@
                 <span class="close" onclick="closeEditModal()">&times;</span>
             </div>
             <div class="modal-body">
-                <form id="editForm" method="post" class="edit-form">
+                <form id="editForm" method="post" action="{% url 'update_placement_details' placement_id=0 %}" class="edit-form">
                     {% csrf_token %}
-                    <input type="hidden" id="editId" name="id">
+                    <input type="hidden" id="editId" name="placement_id">
                     <div class="form-group-modal">
                         <div class="input-group">
                             <label for="editName">Student Name</label>
@@ -172,7 +172,6 @@
             </div>
         </div>
     </div>
-</div>
 <style>
 /* Global Styles */
 html, body {
@@ -700,9 +699,13 @@ footer {
     background-color: rgba(0, 0, 0, 0.8);
     color: white;
     text-align: center;
-    position:relative;
-    top:3rem;
+    position: fixed;
+    bottom: 0; /* Changed to bottom to properly fix the footer */
+    left: 0; /* Ensure it starts from the very left */
+    margin: 0; /* Remove any default margins */
+    padding: 0; /* Remove any default paddings */
 }
+
 </style>
 
 <script>
@@ -988,37 +991,66 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Modal Functions with Enhanced Animations
     window.openEditModal = function(id, name, usn, company, ctc) {
-        const editModal = document.getElementById('editModal');
-        const editForm = document.getElementById('editForm');
-        
-        // Populate form fields
-        document.getElementById('editId').value = id;
-        document.getElementById('editName').value = name;
-        document.getElementById('editUsn').value = usn;
-        document.getElementById('editCompany').value = company;
-        document.getElementById('editCtc').value = ctc;
-        
-        editForm.action = `/placement/update/${id}/`;
-        editModal.style.display = 'flex';
-        
-        // Add animation
-        setTimeout(() => {
-            editModal.querySelector('.modal-content').style.transform = 'translateY(0)';
-            editModal.querySelector('.modal-content').style.opacity = '1';
-        }, 10);
-    };
+    const editModal = document.getElementById('editModal');
+    const editForm = document.getElementById('editForm');
+    
+    // Populate form fields
+    document.getElementById('editId').value = id;
+    document.getElementById('editName').value = name;
+    document.getElementById('editUsn').value = usn;
+    document.getElementById('editCompany').value = company;
+    document.getElementById('editCtc').value = ctc;
+    
+    editForm.action = `/placement/update/${id}/`;
+    editModal.style.display = 'flex';
+    
+    // Add animation
+    requestAnimationFrame(() => {
+        editModal.querySelector('.modal-content').style.transform = 'translateY(0)';
+        editModal.querySelector('.modal-content').style.opacity = '1';
+    });
+};
 
-    window.closeEditModal = function() {
-        const editModal = document.getElementById('editModal');
-        const modalContent = editModal.querySelector('.modal-content');
-        
-        modalContent.style.transform = 'translateY(-20px)';
-        modalContent.style.opacity = '0';
-        
-        setTimeout(() => {
-            editModal.style.display = 'none';
-        }, 300);
-    };
+window.closeEditModal = function() {
+    const editModal = document.getElementById('editModal');
+    const modalContent = editModal.querySelector('.modal-content');
+    
+    modalContent.style.transform = 'translateY(-20px)';
+    modalContent.style.opacity = '0';
+    
+    setTimeout(() => {
+        editModal.style.display = 'none';
+    }, 300);
+};
+
+// Add this to handle form submission
+document.getElementById('editForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch(this.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            closeEditModal();
+            // Optionally refresh the page or update the UI
+            location.reload();
+        } else {
+            alert('Error updating placement details');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating placement details');
+    });
+});
 
     // Document Modal Functions
     window.openDocumentModal = function(modalId) {
