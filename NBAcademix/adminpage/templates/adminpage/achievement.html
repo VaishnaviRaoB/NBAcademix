@@ -1,5 +1,7 @@
+
 {% extends 'adminpage/base.html' %}
 {% load static %}
+
 {% block title %}Achievements{% endblock %}
 
 {% block content %}
@@ -43,7 +45,7 @@
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody id="studentTableBody">
+            <tbody id="achievementTableBody">
                 {% for achievement in achievements %}
                     <tr class="performance-row">
                         <td>{{ achievement.event_name }}</td>
@@ -53,7 +55,6 @@
                                     <i class="fas fa-eye"></i> View Documents
                                 </button>
                             {% endif %}
-
                             <form method="post" action="{% url 'upload_achievement_file' achievement.id %}" enctype="multipart/form-data" class="upload-form">
                                 {% csrf_token %}
                                 <input type="file" name="document" accept=".pdf,.doc,.docx,.xls,.xlsx" class="file-input" required>
@@ -61,13 +62,13 @@
                                     <i class="fas fa-upload"></i> Upload
                                 </button>
                             </form>
-                            <button type="button" class="btn update-btn" onclick="openUpdateModal('{{ achievement.id }}', '{{ achievement.event_name }}')">
+                            <button type="button" class="btn edit-btn update-btn" onclick="openUpdateModal('{{ achievement.id }}', '{{ achievement.event_name }}')">
                                 <i class="fas fa-edit"></i> Update
                             </button>
                             <form method="post" action="{% url 'delete_achievement' achievement.id %}" class="delete-form" onsubmit="return confirm('Are you sure you want to delete this entire record?');">
                                 {% csrf_token %}
                                 <button type="submit" class="btn delete-btn">
-                                    <i class="fas fa-trash"></i> Delete 
+                                    <i class="fas fa-trash"></i> Delete
                                 </button>
                             </form>
                         </td>
@@ -77,35 +78,37 @@
         </table>
     </div>
 
-    <!-- Document Modals -->
-     
-    <div id="updateModal" class="modal">
-        <div class="modal-content update-modal">
-            <div class="modal-header update-header">
-                <h2>Update Achievement Details</h2>
+    <!-- Update Modal -->
+    <div id="updateModal" class="modal update-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Update Achievement</h2>
                 <span class="close" onclick="closeUpdateModal()">&times;</span>
             </div>
             <div class="modal-body">
                 <form id="updateForm" method="post" action="">
                     {% csrf_token %}
-                    <div class="form-group">
+                    <div class="form-field">
                         <label for="event_name">Event Name</label>
-                        <input type="text" id="event_name" name="event_name" class="form-control" required>
+                        <input type="text" id="event_name" name="event_name" required 
+                               class="modal-input" placeholder="Enter event name">
                     </div>
-                    <div class="button-group">
-                        <button type="submit" class="btn add-btn">Save Changes</button>
+                    <div class="modal-footer">
+                        <button type="submit" class=" btn save-btn">
+                            Save Changes
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-    
+
+    <!-- Document Modals -->
     {% for achievement in achievements %}
         {% if achievement.documents.all %}
         <div id="modal-{{ achievement.id }}" class="modal document-modal">
             <div class="modal-content document-modal-content">
                 <div class="modal-header">
-                    
                     <span class="close" onclick="closeDocumentModal('modal-{{ achievement.id }}')">&times;</span>
                 </div>
                 <div class="modal-body document-modal-body">
@@ -148,567 +151,769 @@
 </div>
 
 <style>
-html, body {
-    font-family: 'Arial', sans-serif;
-    line-height: 1.6;
-    background-color: transparent;
-    background: transparent;
-    height: 100%;
-    border: white 2px;
-    scroll-behavior: smooth;
-    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),                 
-    url('{% static "smvitm.jpg" %}') no-repeat center center; 
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-}
-
-.performance-container {
-    padding: 40px 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-    font-family: 'Arial', sans-serif;
-}
-
-h2 {
-    color: WHITE;
-    margin-bottom: 20px;
-    text-align: center;
-    font-size: 28px;
-    font-weight: bold;
-}
-
-/* Alert Styles */
-.alert {
-    background-color: white;
-    color: black;
-    padding: 35px 30px;
-    width: 450px;
-    height: 80px;
-    text-align: center;
-    border-radius: 2px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    
-    /* Positioning */
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    
-    /* Shadow effect */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    
-    /* Animation and transition */
-    animation: slideDown 0.5s ease-in-out;
-    transition: all 0.5s ease-in-out;
-    z-index: 1000;
-}
-
-@keyframes slideDown {
-    from {
-        top: -100px;
-        opacity: 0;
+    html, body {
+        font-family: 'Arial', sans-serif;
+        line-height: 1.6;
+        background-color: transparent;
+        background: transparent;
+        height: 100%;
+        border: white 2px;
+        scroll-behavior: smooth;
+        background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),                 
+        url('{% static "smvitm.jpg" %}') no-repeat center center; 
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
     }
-    to {
+    
+    .performance-container {
+        padding: 40px 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+        font-family: 'Arial', sans-serif;
+    }
+    
+    h2 {
+        color: WHITE;
+        margin-bottom: 20px;
+        text-align: center;
+        font-size: 28px;
+        font-weight: bold;
+    }
+    
+    /* Alert Styles */
+    
+    .alert {
+        background-color: white;
+        color: black;
+        padding: 35px 30px;
+        width: 450px;
+        height: 80px;
+        text-align: center;
+        border-radius: 2px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        /* Positioning */
+        position: fixed;
         top: 20px;
-        opacity: 1;
+        left: 50%;
+        transform: translateX(-50%);
+        
+        /* Shadow effect */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        
+        /* Animation and transition */
+        animation: slideDown 0.5s ease-in-out;
+        transition: all 0.5s ease-in-out;
+        z-index: 1000;
     }
-}
-
-.alert.hidden {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-100px);
-    pointer-events: none;
-}
-
+    
+    @keyframes slideDown {
+        from {
+            top: -100px;
+            opacity: 0;
+        }
+        to {
+            top: 20px;
+            opacity: 1;
+        }
+    }
+    
+    .alert.hidden {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-100px);
+        pointer-events: none;
+    }
+    
     .delete-confirmation {
-    background-color: white;
-    color: #333;
-    width: 450px;
-    height: 150px;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
-    border: none;
-    position: fixed;
-    top: 30px; /* Adjust this value to match the success message position */
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 9999;
-}
-.delete-confirmation p {
-    font-size: 16px;
-    font-weight: 500;
-    margin: 0;
-    color: #333;
-}
-
-.delete-confirmation-buttons {
-    display: flex;
-    gap: 12px;
-    margin-top: 5px;
-}
-
-.delete-btn-confirm {
-    background-color: #dc3545;
-    color: white;
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: background-color 0.2s ease;
-}
-
-.delete-btn-cancel {
-    background-color: #6c757d;
-    color: white;
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: background-color 0.2s ease;
-}
-
-.delete-btn-confirm:hover {
-    background-color: #c82333;
-}
-
-.delete-btn-cancel:hover {
-    background-color: #5a6268;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translate(-50%, -60%);
+        background-color: white;
+        color: #333;
+        width: 450px;
+        height: 150px;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        border: none;
+        position: fixed;
+        top: 30px; /* Adjust this value to match the success message position */
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
     }
-    to {
-        opacity: 1;
-        transform: translate(-50%, -50%);
+    .delete-confirmation p {
+        font-size: 16px;
+        font-weight: 500;
+        margin: 0;
+        color: #333;
     }
-}
-
-@keyframes fadeOut {
-    from {
-        opacity: 1;
-        transform: translate(-50%, -50%);
-    }
-    to {
-        opacity: 0;
-        transform: translate(-50%, -60%);
-    }
-}
-
-.custom-popup.hide {
-    animation: fadeOut 0.3s ease-in forwards;
-}
-
-
-
-/* Add Performance Section */
-.add-performance-section {
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    margin-bottom: 30px;
-    border: 1px solid #ddd;
-}
-
-.form-group {
-    display: flex;
-    gap: 25px;
-    justify-content: center;
-    align-items: center;
-}
-
-.form-input {
-    padding: 10px 15px;
-    border: 2px solid black;
-    border-radius: 4px;
-    font-size: 14px;
-    width: 250px;
-    height: 40px;
-    transition: all 0.3s ease;
-}
-
-.form-input:focus {
-    border-color: #800000;
-    outline: none;
-    box-shadow: 0 0 5px rgba(128, 0, 0, 0.3);
-}
-
-/* Buttons */
-.btn {
-    padding: 10px 15px;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-size: 14px;
-    height: 40px;
-    border: 2px solid black;
-}
-
-.add-btn {
-    background-color: #800000;
-    color: white;
-  
-}
-
-.add-btn:hover {
-    background-color: #600000;
-}
-
-.view-btn {
-    background-color: #007bff;
-    color: white;
     
-}
+    .delete-confirmation-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 5px;
+    }
+    
+    .delete-btn-confirm {
+        background-color: #dc3545;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.2s ease;
+    }
+    
+    .delete-btn-cancel {
+        background-color: #6c757d;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.2s ease;
+    }
+    
+    .delete-btn-confirm:hover {
+        background-color: #c82333;
+    }
+    
+    .delete-btn-cancel:hover {
+        background-color: #5a6268;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translate(-50%, -60%);
+        }
+        to {
+            opacity: 1;
+            transform: translate(-50%, -50%);
+        }
+    }
+    
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+            transform: translate(-50%, -50%);
+        }
+        to {
+            opacity: 0;
+            transform: translate(-50%, -60%);
+        }
+    }
+    
+    .custom-popup.hide {
+        animation: fadeOut 0.3s ease-in forwards;
+    }
+    
+    /* Add Student Section */
+    .add-performance-section {
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+        border: 1px solid #ddd;
+    }
+    
+    .form-group {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .form-input {
+        padding: 10px 15px;
+        border: 2px solid black;
+        border-radius: 4px;
+        font-size: 14px;
+        width: 250px;
+        height: 40px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-input:focus {
+        border-color: #800000;
+        outline: none;
+        box-shadow: 0 0 5px rgba(128, 0, 0, 0.3);
+    }
+    
+    /* Buttons */
+    .btn {
+        padding: 10px 15px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 14px;
+        height: 40px;
+        border: 2px solid black;
+    }
+    
+    .add-btn {
+        background-color: #800000;
+        color: white;
+    }
+    
+    
+    .add-btn:hover {
+        background-color: #600000;
+    }
+    
+    .view-btn {
+        background-color: #007bff;
+        color: white;
+    }
+    
+    .view-btn:hover {
+        background-color: #0056b3;
+    }
+    
+    .upload-btn {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .upload-btn:hover {
+        background-color: #218838;
+    }
+    
+    .delete-btn {
+        background-color: #dc3545;
+        color: white;
+    }
+    
+    
+    .modal-header {
+        background: #800000;
+        color: white;
+        padding:15px 20px;
+        border-radius: 8px 8px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-header h3 {
+        margin: 0;
+        color: black;
+        width: 100%;  /* Ensures header takes full width */
+        box-sizing: border-box;
+    }
+    
+    .modal-header .close {
+        color: rgb(131, 20, 20);
+        opacity: 1;
+        font-size: 24px;
+        font-weight: normal;
+    }
+    
+    .modal-body {
+        padding: 20px;
+    }
+    
+    .form-field {
+        margin-bottom: 20px;
+    }
+    
+    .form-field label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        color: black;
+    }
+    
+    .modal-input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid black;
+        border-radius: 4px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+    
+    .modal-input:focus {
+        border-color: #800000;
+        outline: none;
+        box-shadow: 0 0 5px rgba(128, 0, 0, 0.2);
+    }
+    
+    .modal-footer {
+        text-align: center;
+        margin-top: 20px;
+    }
+    
 
-.view-btn:hover {
-    background-color: #0056b3;
-}
-
-.upload-btn {
-    background-color: #28a745;
-    color: white;
-}
-
-.upload-btn:hover {
-    background-color: #218838;
-}
-
-.delete-btn {
-    background-color: #dc3545;
-    color: white;
-}
-
-.delete-btn:hover {
-    background-color: #c82333;
-}
-
-.download-btn {
-    background-color: #28a745;
-    color: white;
-}
-
-.download-btn:hover {
-    background-color: #218838;
-}
-
-/* Search Container */
-.search-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 20px;
-    gap: 10px;
-}
-
-.search-input {
-    width: 50%;
-    padding: 10px 15px;
-    border: 1px solid black;
-    border-radius: 4px;
-    font-size: 14px;
-}
-
-.search-input:focus {
-    border-color: #800000;
-    outline: none;
-}
-
-.search-icon {
-    font-size: 20px;
-    color: WHITE;
-    cursor: pointer;
-}
-
-/* Table Responsive */
-.table-responsive {
-    margin-bottom: 20px;
+    .delete-btn:hover {
+        background-color: #c82333;
+    }
+    
+    .download-btn {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .download-btn:hover {
+        background-color: #218838;
+    }
+    
+    /* Search Container */
+    .search-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 20px;
+        gap: 10px;
+    }
+    
+    .search-input {
+        width: 50%;
+        padding: 10px 15px;
+        border: 1px solid black;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    
+    .search-input:focus {
+        border-color: #800000;
+        outline: none;
+    }
+    
+    .search-icon {
+        font-size: 20px;
+        color: WHITE;
+        cursor: pointer;
+    }
+    
+    /* Table Responsive */
+    .table-responsive {
+        margin-bottom: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        overflow-x: auto;
+    }
+    
+    .performance-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    
+    .performance-table th,
+    .performance-table td {
+        padding: 12px;
+        text-align: center;
+        border: 1px solid black;
+        vertical-align: middle;
+    }
+    
+    .performance-table th {
+        background-color: #800000;
+        color: white;
+        font-weight: 600;
+    }
+    
+    .performance-table tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    /* Action Buttons Container */
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+        padding: 4px;
+        min-height: 40px;
+        align-items: center;
+    }
+    
+    /* File Input Styling */
+    .file-input {
+        display: none;
+    }
+    
+    /* Document Modal Styles */
+    .document-modal-content {
+        width: 90%;
+        max-width: 1200px;
+    }
+    
+    .document-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+    }
+    
+    .document-card {
+        width: 250px;
+        background-color: #f9f9f9;
+        border: 1px solid black;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .document-icon {
+        font-size: 60px;
+        color: #800000;
+        margin-bottom: 15px;
+    }
+    
+    .document-name {
+        font-weight: bold;
+        margin-bottom: 15px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .document-actions {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+    }
+    
+    .document-actions a {
+        text-decoration: none;
+    }
+    
+    .document-delete-actions {
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: center;
+    }
+    
+    .document-date {
+        font-size: 12px;
+        color: #666;
+    }
+    .update-btn {
+        background-color: yellow;
+        color: black;
+    }
+    .update-btn:hover {
+        background-color:  orange;
+    }
+    
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    
+    .modal-content {
+        background-color: white;
+        border-radius: 8px;
+        width: 80%;
+        max-width: 1000px;
+        max-height: 80%;
+        overflow-y: auto;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        position: relative;
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        background-color: #f4f4f4;
+        border-bottom: 1px solid #ddd;
+    }
+    
+    .close {
+        font-size: 24px;
+        cursor: pointer;
+        color: #800000;
+    }
+    
+    .close:hover {
+        color: #600000;
+    }
+ /* Update Modal Specific Styles */
+.update-modal .modal-content {
     background: white;
     border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    overflow-x: auto;
-}
-
-.performance-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-}
-
-.performance-table th,
-.performance-table td {
-    padding: 12px;
-    text-align: center;
-    border: 1px solid black;
-    vertical-align: middle;
-}
-
-.performance-table th {
-    background-color: #800000;
-    color: white;
-    font-weight: 600;
-}
-
-.performance-table tr:hover {
-    background-color: #f8f9fa;
-}
-
-/* Action Buttons Container */
-.action-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-    padding: 4px;
-    min-height: 40px;
-    align-items: center;
-}
-
-/* File Input Styling */
-.file-input {
-    display: none;
-}
-
-/* Document Modal Styles */
-.document-modal-content {
     width: 90%;
-    max-width: 1200px;
-    
+    max-width: 400px;
+    padding: 0;
+    margin: 15% auto;
 }
 
-.document-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    padding: 20px;
-    justify-content: center;
-    
-}
-
-.document-card {
-    width: 250px;
-    background-color: #f9f9f9;
-    border: 1px solid black;
-    border-radius: 8px;
-    padding: 20px;
-    text-align: center;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-.document-icon {
-    font-size: 60px;
-    color: #800000;
-    margin-bottom: 15px;
-}
-
-.document-name {
-    font-weight: bold;
-    margin-bottom: 15px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.document-actions {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 15px;
-}
-
-.document-actions a {
-    text-decoration: none;
-}
-
-.document-delete-actions {
-    margin-bottom: 15px;
-    display: flex;
-    justify-content: center;
-}
-
-.document-date {
-    font-size: 12px;
-    color: #666;
-}
-/* Modal Background Overlay */
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 20rem;
-    width: 100%;
-    height: 100%;
-    z-index: 1000;
-    top:60px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-
-}
-
-/* Modal Container */
-.update-modal {
-    background: white;
-    width: 370px;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-/* Update Button */
-.update-btn {
-    background-color: #FFD700;
-    color: black;
-    border: 2px solid black;
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    transition: all 0.3s ease;
-}
-
-.update-btn:hover {
-    background-color: #FFA500;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Modal Header */
-.modal-header {
-    background-color: #fbf6f6;
-    width: 60%;
-    padding: 10px 15px;
-    border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
-    position: relative;
+.update-modal .modal-header {
+    background: #800000;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px 8px 0 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
-.update-header{
-    width: 100%;
-}
-.modal-header h2 {
-    color: #800000;
+
+.update-modal .modal-header h2 {
     margin: 0;
-    font-size: 25px;
+    font-size: 20px;
+    color: white;
+    width: 100%;
+}
+
+.update-modal .modal-header .close {
+    color: white;
+    opacity: 1;
+    font-size: 24px;
     font-weight: normal;
 }
 
-/* Close Button */
-.close {
-    color: #800000;
-    font-size: 24px;
-    cursor: pointer;
-    opacity: 0.8;
-    padding: 0 5px;
-}
-
-.close:hover {
-    opacity: 1;
-}
-
-/* Modal Body */
-.modal-body {
+.update-modal .modal-body {
     padding: 20px;
-    background-color: #fefefe;
-    width: 60%;
 }
 
-/* Form Elements */
-.form-control {
-    width: calc(100% - 20px);
-    padding: 8px 10px;
-    border: 1px solid #ddd;
-    border-radius: 3px;
-    margin-bottom: 15px;
+.update-modal .form-group {
+    margin-bottom: 20px;
+    display: block;
+}
+
+.update-modal .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: black;
+}
+
+.update-modal .form-group input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid black;
+    border-radius: 4px;
     font-size: 14px;
+    box-sizing: border-box;
 }
 
-.form-control:focus {
-    border-color: #f1e9e9;
+.update-modal .form-group input:focus {
+    border-color: #800000;
     outline: none;
-    box-shadow: 0 0 3px rgba(244, 243, 243, 0.2);
+    box-shadow: 0 0 5px rgba(128, 0, 0, 0.2);
 }
 
-/* Save Button */
-.save-btn {
+.update-modal .save-btn {
+    width: 100%;
     background-color: #800000;
     color: white;
-    padding: 8px 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 15px;
+    border-radius: 4px;
     border: none;
-    border-radius: 3px;
     cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
+    margin-top: 10px;
 }
 
-.save-btn:hover {
+.update-modal .save-btn:hover {
     background-color: #600000;
 }
-
-/* Responsive Adjustments */
-@media (max-width: 480px) {
-    .update-modal {
-        width: 90%;
-        margin: 0 auto;
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .performance-container {
+            padding: 10px;
+        }
+    
+        .form-group {
+            flex-direction: column;
+        }
+    
+        .search-input {
+            width: 100%;
+        }
+    
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+ </style>
+<script>
+function openUpdateModal(id, eventName) {
+    const modal = document.getElementById('updateModal');
+    if (modal) {
+        document.getElementById('event_name').value = eventName;
+        document.getElementById('updateForm').action = "{% url 'update_achievement' 0 %}".replace('0', id);
+        modal.style.display = 'block';
     }
 }
-</style>
 
-<script>
+function closeUpdateModal() {
+    const modal = document.getElementById('updateModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function openDocumentModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+function closeDocumentModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+    }
+}
+
+// Search functionality
+document.getElementById('searchInput').addEventListener('input', function() {
+    const searchQuery = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#achievementTableBody tr');
+
+    rows.forEach(row => {
+        const eventName = row.cells[0].textContent.toLowerCase();
+        if (eventName.includes(searchQuery)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+
+// File input trigger
+document.querySelectorAll('.upload-form').forEach(form => {
+    form.querySelector('.upload-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        form.querySelector('.file-input').click();
+    });
+
+    form.querySelector('.file-input').addEventListener('change', function() {
+        form.submit();
+    });
+});
+
+// Custom delete confirmation
+document.querySelectorAll('.delete-form').forEach(form => {
+    form.onsubmit = function(e) {
+        e.preventDefault();
+        
+        const popup = document.createElement('div');
+        popup.className = 'custom-popup';
+        popup.style.display = 'block';
+        
+        popup.innerHTML = `
+            <div class="custom-popup-content delete-confirmation">
+                <p>Are you sure you want to delete this record?</p>
+                <div class="delete-confirmation-buttons">
+                    <button onclick="confirmDelete(true, this)" class="delete-btn-confirm">Yes, Delete</button>
+                    <button onclick="confirmDelete(false, this)" class="delete-btn-cancel">Cancel</button>
+                </div>
+            </div>
+        `;
+        
+        // Remove any existing confirmation popups
+        const existingPopups = document.querySelectorAll('.custom-popup');
+        existingPopups.forEach(existing => {
+            if (existing !== popup) {
+                existing.remove();
+            }
+        });
+        
+        document.body.appendChild(popup);
+        popup.dataset.formRef = form.action;
+    };
+});
+
+function confirmDelete(confirmed, buttonElement) {
+    const popup = buttonElement.closest('.custom-popup');
+    const formAction = popup.dataset.formRef;
     
+    if (confirmed) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = formAction;
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+    
+    popup.classList.add('hide');
+    setTimeout(() => {
+        popup.remove();
+    }, 300);
+}
 
- function showAlert(message, type = 'info') {
-    // Create alert element
+function showAlert(message, type = 'info') {
     const alert = document.createElement('div');
     alert.className = `alert alert-${type}`;
     alert.id = 'alert-message';
     alert.textContent = message;
     
-    // Remove any existing alerts
     const existingAlert = document.getElementById('alert-message');
     if (existingAlert) {
         existingAlert.remove();
     }
     
-    // Add to document
     document.body.appendChild(alert);
     
-    // Set timeout to remove completely
     setTimeout(() => {
         alert.classList.add('hidden');
-        // Remove from DOM after animation completes
         setTimeout(() => {
             if (alert && alert.parentNode) {
                 alert.parentNode.removeChild(alert);
             }
-        }, 300); // Match transition duration
+        }, 300);
     }, 3000);
 }
 
-// Initialize alert handling for existing alerts
 document.addEventListener('DOMContentLoaded', () => {
+    // Hide all modals on page load
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        modal.style.display = 'none';
+    });
+
+    // Handle existing alerts
     const existingAlerts = document.querySelectorAll('.alert');
     existingAlerts.forEach(alert => {
         setTimeout(() => {
@@ -721,161 +926,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     });
 });
-
-// For your existing setTimeout code, replace it with this:
-const alertMessage = document.getElementById("alert-message");
-if (alertMessage) {
-    setTimeout(() => {
-        alertMessage.classList.add("hidden");
-        setTimeout(() => {
-            if (alertMessage && alertMessage.parentNode) {
-                alertMessage.parentNode.removeChild(alertMessage);
-            }
-        }, 300);
-    }, 3000);
-}
-
-
-      // Custom delete confirmation
-      document.querySelectorAll('.delete-form').forEach(form => {
-        form.onsubmit = function(e) {
-            e.preventDefault();
-            
-            const popup = document.createElement('div');
-            popup.className = 'custom-popup';
-            popup.style.display = 'block';
-            
-            popup.innerHTML = `
-                <div class="custom-popup-content delete-confirmation">
-                    <p>Are you sure you want to delete this record?</p>
-                    <div class="delete-confirmation-buttons">
-                        <button onclick="confirmDelete(true, this)" class="delete-btn-confirm">Yes, Delete</button>
-                        <button onclick="confirmDelete(false, this)" class="delete-btn-cancel">Cancel</button>
-                    </div>
-                </div>
-            `;
-             // Remove any existing confirmation popups
-             const existingPopups = document.querySelectorAll('.custom-popup');
-            existingPopups.forEach(existing => {
-                if (existing !== popup) {
-                    existing.remove();
-                }
-            });
-            document.body.appendChild(popup);
-            
-            // Store the form reference
-            popup.dataset.formRef = form.action;
-        };
-    });
-
-    function confirmDelete(confirmed, buttonElement) {
-        const popup = buttonElement.closest('.custom-popup');
-        const formAction = popup.dataset.formRef;
-        
-        if (confirmed) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = formAction;
-            
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = 'csrfmiddlewaretoken';
-            csrfInput.value = csrfToken;
-            form.appendChild(csrfInput);
-            
-            document.body.appendChild(form);
-            form.submit();
-        }
-        
-        popup.classList.add('hide');
-        setTimeout(() => {
-            popup.remove();
-        }, 300);
-    }
-        
-
-    // File input trigger
-    document.querySelectorAll('.upload-form').forEach(form => {
-        form.querySelector('.upload-btn').addEventListener('click', function(e) {
-            e.preventDefault();
-            form.querySelector('.file-input').click();
-        });
-
-        form.querySelector('.file-input').addEventListener('change', function() {
-            form.submit();
-        });
-    });
-
-    // Document Modal Functions
-    function openDocumentModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'flex';
-        }
-    }
-
-    function closeDocumentModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'none';
-        }
-    }
-
-    // Close modal when clicking outside
-    document.addEventListener('click', function(event) {
-        const modals = document.querySelectorAll('.modal');
-        modals.forEach(modal => {
-            if (event.target === modal) {
-                modal.style.display = 'none';
-            }
-        });
-    });
-
-    // Alert message fading
-    setTimeout(() => {
-        const alertMessage = document.getElementById("alert-message");
-        if (alertMessage) alertMessage.classList.add("hidden");
-    }, 3000);
-    // Search Functionality
-document.getElementById('searchInput').addEventListener('input', function() {
-    const searchValue = this.value.toLowerCase();
-    const rows = document.querySelectorAll('#studentTableBody .performance-row');
-
-    rows.forEach(row => {
-        const eventName = row.querySelector('td:first-child').textContent.toLowerCase();
-        if (eventName.includes(searchValue)) {
-            row.style.display = ''; // Show the row
-        } else {
-            row.style.display = 'none'; // Hide the row
-        }
-    });
-});
-function openUpdateModal(achievementId, eventName) {
-    const modal = document.getElementById('updateModal');
-    const form = document.getElementById('updateForm');
-    const eventNameInput = document.getElementById('event_name');
-    
-    // Set the current values
-    eventNameInput.value = eventName;
-    
-    // Update the form action
-    form.action = `/update-achievement/${achievementId}/`;
-    
-    modal.style.display = 'block';
-}
-
-function closeUpdateModal() {
-    const modal = document.getElementById('updateModal');
-    modal.style.display = 'none';
-}
-
-// Close modal when clicking outside
-window.onclick = function(event) {
-    const modal = document.getElementById('updateModal');
-    if (event.target == modal) {
-        modal.style.display = 'none';
-    }
-}
 </script>
 {% endblock %}

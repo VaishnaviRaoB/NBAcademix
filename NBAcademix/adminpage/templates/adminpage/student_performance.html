@@ -32,7 +32,7 @@
                     <option value="THIRD">THIRD YEAR</option>
                     <option value="FOURTH">FOURTH YEAR</option>
                 </select>
-                <input type="text" name="academic_year" placeholder="Enter academic year (e.g., 2023-2024)" required class="form-input">
+                <input type="text" name="academic_year" placeholder="Enter Academic Year (e.g: 2023-2024)" required class="form-input">
                 <button type="submit" class="btn add-btn">
                     <i class="fas fa-plus"></i> Add Performance Record
                 </button>
@@ -165,32 +165,36 @@
         {% endif %}
     {% endfor %}
 
-    {% for performance in performances %}
-    <div id="update-modal-{{ performance.id }}" class="modal update-modal" >
-        <div class="modal-content upload-content update-content" >
-            <div class="modal-header ">
-                <h2 style="color: #800000;">Update Performance Details</h2>
-                <span class="close" onclick="closeUpdateModal('update-modal-{{ performance.id }}')">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form method="post" action="{% url 'update_performance' performance.id %}">
-                    {% csrf_token %}
-                    <div class="form-group">
-                        <label for="academic_year_in">Year</label>
-                        <input type="text" name="academic_year_in" value="{{ performance.academic_year_in }}" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="academic_year">Academic Year</label>
-                        <input type="text" name="academic_year" value="{{ performance.academic_year }}" required>
-                    </div>
+<!-- Update Modal -->
+{% for performance in performances %}
+<div id="update-modal-{{ performance.id }}" class="modal update-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Update Performance Details</h2>
+            <span class="close" onclick="closeUpdateModal('update-modal-{{ performance.id }}')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form method="post" action="{% url 'update_performance' performance.id %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="academic_year_in">Year</label>
+                    <input type="text" name="academic_year_in" value="{{ performance.academic_year_in }}" required class="modal-input">
+                </div>
+                <div class="form-group">
+                    <label for="academic_year">Academic Year</label>
+                    <input type="text" name="academic_year" value="{{ performance.academic_year }}" required class="modal-input">
+                </div>
+                <div class="modal-footer">
                     <button type="submit" class="btn save-btn">
                         <i class="fas fa-save"></i> Save Changes
                     </button>
-                </form>
-            </div>
+                </div>
+            </form>
         </div>
     </div>
-    {% endfor %}
+</div>
+{% endfor %}
+<div id="overlay" class="overlay" style="display: none;"></div>
     <!-- Chart Modals (Existing chart modal code remains the same) -->
     {% for performance in performances %}
     {% if performance.performance_chart and performance.performance_chart.chart_image %}
@@ -205,7 +209,6 @@
                     <span class="close" onclick="closeChartModal('chart-modal-{{ performance.id }}')">&times;</span>
                 </div>
             </div>
-            
             <div class="modal-body chart-modal-body">
                 <div class="chart-summary-content">
                     <div class="chart-summary-stats">
@@ -431,6 +434,8 @@ h2 {
         opacity: 1;
     }
 }
+/* Overlay Styles */
+
 
 .alert.hidden {
     opacity: 0;
@@ -551,7 +556,7 @@ h2 {
     border: 2px solid black;
     border-radius: 4px;
     font-size: 14px;
-    width: 250px;
+    width: 265px;
     height: 40px;
     transition: all 0.3s ease;
     background-color: white;
@@ -767,33 +772,108 @@ h2 {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     position: relative;
 }
-.update-modal{
-    width: 40rem;
-    
-}
-.update-content{
-    position: relative;
-    top:15rem;
-    left:2rem;
-    display: flex;
-    gap:1rem;
-    flex-direction: column;
-}
 .modal-header {
+    display: flex;
+    justify-content: space-between; /* Space between title and actions */
+    align-items: center; /* Center items vertically */
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+.modal-actions {
+    display: flex; /* Use flexbox for the actions */
+    align-items: center; /* Center items vertically */
+}
+
+.modal-actions .btn {
+    margin-left: 10px; /* Space between buttons */
+    height: 40px; /* Ensure all buttons have the same height */
+    padding: 8px 12px; /* Consistent padding */
+}
+/* Update Modal Specific Styles */
+.update-modal .modal-content {
+    background: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 400px;
+    padding: 0;
+    margin: 15% auto;
+}
+
+.update-modal .modal-header {
+    background: #800000;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px 8px 0 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px;
-    background-color: #f4f4f4;
-    border-bottom: 1px solid #ddd;
 }
 
-.modal-actions {
-    display: flex;
+.update-modal .modal-header h2 {
+    margin: 0;
+    font-size: 20px;
+    color: white;
+    width: 100%;
+}
+
+.update-modal .modal-header .close {
+    color: white;
+    opacity: 1;
+    font-size: 24px;
+    font-weight: normal;
+}
+
+.update-modal .modal-body {
+    padding: 20px;
+}
+
+.update-modal .form-group {
+    margin-bottom: 20px;
+    display: block;
+}
+
+.update-modal .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: black;
+}
+
+.update-modal .form-group input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid black;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.update-modal .form-group input:focus {
+    border-color: #800000;
+    outline: none;
+    box-shadow: 0 0 5px rgba(128, 0, 0, 0.2);
+}
+
+.update-modal .save-btn {
+    width: 100%;
+    background-color: #800000;
+    color: white;
+    display: inline-flex;
     align-items: center;
-    gap: 15px;  /* Space between download button and close button */
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 15px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
 }
 
+.update-modal .save-btn:hover {
+    background-color: #600000;
+}
 .close {
     font-size: 24px;
     cursor: pointer;
@@ -825,47 +905,62 @@ h2 {
     background-color: orange;
 }
 
-.save-btn {
-    background-color:#600000;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-top: 15px;
-    position: relative;
-    left: 10rem;
-    margin-bottom: 2rem;
-}
 
 /* Chart Modal Specific Styles */
 .chart-modal {
-    z-index: 1500;
+    z-index: 1000;
 }
-
-.chart-modal-content {
-    width: 90%;
-    max-width: 1200px;
+.chart-modal .modal-header {
+    display: flex;
+    justify-content: space-between; /* Space between title and actions */
+    align-items: center; /* Center items vertically */
+    padding: 15px; /* Adjust padding as needed */
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
 }
 
 .chart-modal-body {
+    padding: 20px; /* Increase padding for better spacing */
     background-color: #f9f9f9;
-    border-radius: 8px;
-    padding: 20px;
 }
 
 .chart-download-btn {
     background-color: #28a745;
     color: white;
-    padding: 8px 15px;
+    padding: 8px 12px;
+    font-size: 14px;
     border-radius: 4px;
     border: none;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 5px;
+    height: 32px;
     transition: all 0.3s ease;
     text-decoration: none;
+    white-space: nowrap;
+}
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Dimmed background */
+    z-index: 999; /* Below the modal */
+    display: none; /* Hidden by default */
+}
+
+/* Adjust Chart Modal Styles */
+.chart-modal-content {
+    background-color: white;
+    border-radius: 8px;
+    width: 90%; /* Increase width to 90% */
+    max-width: 1200px; /* Set a larger max width */
+    max-height: 90%; /* Increase max height to 90% */
+    overflow-y: auto; /* Allow scrolling if content exceeds max height */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
 }
 
 .chart-summary-content {
@@ -903,16 +998,15 @@ h2 {
     color: #333;
 }
 
-.section-header {
+.chart-summary-stats .section-header {
     background-color: #800000;
-    color: #000000;
+    color: white;
     text-align: center;
-    font-weight: 2000;
+    font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    padding: 8px;
-    border: 2px solid #000000;
-    margin-bottom: 10px;
+    padding: 12px 8px;
+    border: 1px solid #000000;
 }
 
 .chart-summary-stats th {
@@ -1107,45 +1201,49 @@ if (alertMessage) {
         });
     });
 
-    // Document Modal Functions
     function openDocumentModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'flex';
-        }
+    const modal = document.getElementById(modalId);
+    const overlay = document.getElementById('overlay');
+    if (modal) {
+        modal.style.display = 'flex';
+        overlay.style.display = 'block'; // Show overlay
     }
+}
 
-    function closeDocumentModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'none';
-        }
+function closeDocumentModal(modalId) {
+    const modal = document.getElementById(modalId);
+    const overlay = document.getElementById('overlay');
+    if (modal) {
+        modal.style.display = 'none';
+        overlay.style.display = 'none'; // Hide overlay
     }
+}
 
-    // Existing chart modal functions
     function openChartModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'flex';
-        }
+    const modal = document.getElementById(modalId);
+    const overlay = document.getElementById('overlay');
+    if (modal) {
+        modal.style.display = 'flex';
+        overlay.style.display = 'block'; // Show overlay
     }
+}
 
-    function closeChartModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'none';
-        }
+function closeChartModal(modalId) {
+    const modal = document.getElementById(modalId);
+    const overlay = document.getElementById('overlay');
+    if (modal) {
+        modal.style.display = 'none';
+        overlay.style.display = 'none'; // Hide overlay
     }
-
-    // Close modal when clicking outside
-    document.addEventListener('click', function(event) {
-        const modals = document.querySelectorAll('.modal');
-        modals.forEach(modal => {
-            if (event.target === modal) {
-                modal.style.display = 'none';
-            }
-        });
+}
+   // Close modal when clicking on the overlay
+document.getElementById('overlay').addEventListener('click', function() {
+    const modals = document.querySelectorAll('.chart-modal');
+    modals.forEach(modal => {
+        modal.style.display = 'none';
     });
+    this.style.display = 'none'; // Hide overlay
+});
     
 function openUpdateModal(modalId) {
     document.getElementById(modalId).style.display = "block";
