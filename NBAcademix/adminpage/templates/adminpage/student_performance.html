@@ -166,10 +166,10 @@
     {% endfor %}
 
     {% for performance in performances %}
-    <div id="update-modal-{{ performance.id }}" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Update Performance Details</h2>
+    <div id="update-modal-{{ performance.id }}" class="modal update-modal" >
+        <div class="modal-content upload-content update-content" >
+            <div class="modal-header ">
+                <h2 style="color: #800000;">Update Performance Details</h2>
                 <span class="close" onclick="closeUpdateModal('update-modal-{{ performance.id }}')">&times;</span>
             </div>
             <div class="modal-body">
@@ -750,7 +750,6 @@ h2 {
     left: 50%;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
     justify-content: center;
     align-items: center;
     z-index: 1000;
@@ -768,7 +767,18 @@ h2 {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     position: relative;
 }
-
+.update-modal{
+    width: 40rem;
+    
+}
+.update-content{
+    position: relative;
+    top:15rem;
+    left:2rem;
+    display: flex;
+    gap:1rem;
+    flex-direction: column;
+}
 .modal-header {
     display: flex;
     justify-content: space-between;
@@ -807,7 +817,7 @@ h2 {
     margin: 0 5px;
     border-radius: 4px;
     cursor: pointer;
-    height: 2.2rem;
+    height: 2.5rem;
     border: 2px solid black;
 }
 
@@ -823,6 +833,9 @@ h2 {
     border-radius: 4px;
     cursor: pointer;
     margin-top: 15px;
+    position: relative;
+    left: 10rem;
+    margin-bottom: 2rem;
 }
 
 /* Chart Modal Specific Styles */
