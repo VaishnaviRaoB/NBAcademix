@@ -246,28 +246,24 @@ def student_performance_view(request):
     return render(request, 'adminpage/student_performance.html', context)
 
 @login_required
-def delete_performance(request, document_id):
-    document = get_object_or_404(Document, id=document_id)
-    performance = document.performance
+def delete_performance(request, performance_id):
+    # Fetch the performance object using the passed ID
+    performance = get_object_or_404(StudentPerformance, id=performance_id)
 
-    # Store the performance ID before deletion
-    performance_id = performance.id
+    # Delete all associated documents
+    performance.documents.all().delete()
 
-    # Delete the document
-    document.delete()
+    # Delete the associated performance chart if it exists
+    try:
+        performance_chart = PerformanceChart.objects.get(performance=performance)
+        performance_chart.delete()
+    except PerformanceChart.DoesNotExist:
+        pass
 
-    # Check if any documents remain for this performance
-    remaining_documents = performance.documents.all()
+    # Finally, delete the performance record
+    performance.delete()
 
-    if not remaining_documents:
-        # If no documents remain, delete the associated performance chart if it exists
-        try:
-            performance_chart = PerformanceChart.objects.get(performance=performance)
-            performance_chart.delete()
-        except PerformanceChart.DoesNotExist:
-            pass
-
-    messages.success(request, "Document deleted successfully.")
+    messages.success(request, "Performance and all associated records have been deleted successfully.")
     return redirect('student_performance')
 
 @login_required
@@ -877,54 +873,77 @@ def placement_home(request):
     if request.method == 'POST':
         year = request.POST.get('year')
         if year:
-            passout_year = PassoutYear.objects.create(year=year)
-            return redirect('placement_year_details', year_id=passout_year.id)
+            try:
+                # Check if year already exists
+                if PassoutYear.objects.filter(year=year).exists():
+                    messages.error(request, 'This placement year already exists.')
+                else:
+                    passout_year = PassoutYear.objects.create(year=year)
+                    messages.success(request, 'Placement year added successfully.')
+            except Exception as e:
+                messages.error(request, f'Error adding placement year: {str(e)}')
+        else:
+            messages.error(request, 'Please provide a year.')
+        return redirect('placement_home')
+        
     passout_years = PassoutYear.objects.all()
     context = {
         'passout_years': passout_years
     }
     return render(request, 'adminpage/placement_home.html', context)
+
 @login_required
 def update_passout_year(request, year_id):
+    if request.method != 'POST':
+        return redirect('placement_home')
+        
     try:
         year_obj = PassoutYear.objects.get(id=year_id)
         new_year = request.POST.get('year')
         
         if not new_year:
-            return JsonResponse({'success': False, 'error': 'Year is required'})
-        
+            messages.error(request, 'Please provide a year.')
+            return redirect('placement_home')
+            
         # Check if the new year already exists for another record
         if PassoutYear.objects.filter(year=new_year).exclude(id=year_id).exists():
-            return JsonResponse({'success': False, 'error': 'This year already exists'})
-        
+            messages.error(request, 'This year already exists.')
+            return redirect('placement_home')
+            
         year_obj.year = new_year
         year_obj.save()
-        return JsonResponse({'success': True})
+        messages.success(request, 'Placement year updated successfully.')
+        
     except PassoutYear.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Year not found'})
+        messages.error(request, 'Year not found.')
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+        messages.error(request, f'Error updating year: {str(e)}')
+    
+    return redirect('placement_home')
 
-# Details for a specific passout year, including placement details
 @login_required
 def placement_year_details(request, year_id):
-    passout_year = get_object_or_404(PassoutYear, id=year_id)
-    placement_details = PlacementDetails.objects.filter(passout_year=passout_year)
-    
-    # If search query is present
-    search_query = request.GET.get('search', '')
-    if search_query:
-        placement_details = placement_details.filter(
-            Q(name__icontains=search_query) | 
-            Q(usn__icontains=search_query) | 
-            Q(company_name__icontains=search_query)
-        )
-    
-    context = {
-        'passout_year': passout_year,
-        'placement_details': placement_details
-    }
-    return render(request, 'adminpage/placement_year_details.html', context)
+    try:
+        passout_year = get_object_or_404(PassoutYear, id=year_id)
+        placement_details = PlacementDetails.objects.filter(passout_year=passout_year)
+        
+        # If search query is present
+        search_query = request.GET.get('search', '')
+        if search_query:
+            placement_details = placement_details.filter(
+                Q(name__icontains=search_query) | 
+                Q(usn__icontains=search_query) | 
+                Q(company_name__icontains=search_query)
+            )
+        
+        context = {
+            'passout_year': passout_year,
+            'placement_details': placement_details
+        }
+        return render(request, 'adminpage/placement_year_details.html', context)
+    except Exception as e:
+        messages.error(request, f'Error loading placement details: {str(e)}')
+        return redirect('placement_home')
 
 # Add Placement Details
 
@@ -932,23 +951,34 @@ def placement_year_details(request, year_id):
 def add_placement_details(request, year_id):
     try:
         passout_year = get_object_or_404(PassoutYear, id=year_id)
+        
         if request.method == 'POST':
+            # Validate required fields
+            name = request.POST.get('name')
+            usn = request.POST.get('usn')
+            company_name = request.POST.get('company_name')
+            ctc = request.POST.get('ctc')
+            
+            if not all([name, usn, company_name, ctc]):
+                messages.error(request, 'Please fill in all required fields.')
+                return redirect('placement_year_details', year_id=year_id)
+                
+            # Create placement details
             placement = PlacementDetails.objects.create(
                 passout_year=passout_year,
-                name=request.POST.get('name'),
-                usn=request.POST.get('usn'),
-                company_name=request.POST.get('company_name'),
-                ctc=request.POST.get('ctc')
+                name=name,
+                usn=usn,
+                company_name=company_name,
+                ctc=ctc
             )
-            return JsonResponse({
-                'status': 'success',
-                'message': 'Placement details added successfully!'
-            })
+            
+            messages.success(request, 'Placement details added successfully.')
+            return redirect('placement_year_details', year_id=year_id)
+            
     except Exception as e:
-        return JsonResponse({
-            'status': 'error',
-            'message': str(e)
-        }, status=400)
+        messages.error(request, 'Error adding placement details. Please try again.')
+    
+    return redirect('placement_year_details', year_id=year_id)
 
 @login_required
 def update_placement_details(request, placement_id):
@@ -960,48 +990,49 @@ def update_placement_details(request, placement_id):
             placement.company_name = request.POST.get('company_name')
             placement.ctc = request.POST.get('ctc')
             placement.save()
-            
-            return JsonResponse({
-                'status': 'success',
-                'message': 'Placement details updated successfully!'
-            })
+            messages.success(request, 'Placement details updated successfully.')
     except Exception as e:
-        return JsonResponse({
-            'status': 'error',
-            'message': str(e)
-        }, status=400)
-        
+        messages.error(request, f'Error updating placement details: {str(e)}')
+    return redirect('placement_year_details', year_id=placement.passout_year.id)
+
 @login_required
 def delete_passout_year(request, year_id):
-    # Fetch the PassoutYear object based on the year_id
-    passout_year = get_object_or_404(PassoutYear, id=year_id)
-    passout_year.delete()
+    try:
+        passout_year = get_object_or_404(PassoutYear, id=year_id)
+        passout_year.delete()
+        messages.success(request, 'Placement year deleted successfully.')
+    except Exception as e:
+        messages.error(request, f'Error deleting placement year: {str(e)}')
     return redirect('placement_home')
 
 @login_required
-def get_placement_for_edit(request, pk):
-    # Fetch the PlacementDetails object based on the primary key (pk)
-    placement = get_object_or_404(PlacementDetails, pk=pk)
-
-    # If the request is a POST, handle the form submission
-    if request.method == 'POST':
-        form = PlacementDetails(request.POST, instance=placement)
-        if form.is_valid():
-            form.save()
-            return redirect('placement_home')  # Redirect to a relevant page after saving the form
-    else:
-        # If it's a GET request, render the form with the existing placement details
-        form = PlacementDetails(instance=placement)
-
-    return render(request, 'adminpage/placement_edit.html', {'form': form, 'placement': placement})
-
-# Delete Placement Details
-@login_required
 def delete_placement_details(request, placement_id):
-    placement = get_object_or_404(PlacementDetails, id=placement_id)
-    passout_year = placement.passout_year  # Get the associated PassoutYear for redirection
-    placement.delete()
-    return redirect('placement_year_details', year_id=passout_year.id)  # Redirect to placement_year_details
+    try:
+        placement = get_object_or_404(PlacementDetails, id=placement_id)
+        year_id = placement.passout_year.id
+        placement.delete()
+        messages.success(request, 'Placement details deleted successfully.')
+    except Exception as e:
+        messages.error(request, f'Error deleting placement details: {str(e)}')
+        year_id = placement.passout_year.id
+    return redirect('placement_year_details', year_id=year_id)
+
+@login_required
+def get_placement_for_edit(request, pk):
+    try:
+        placement = get_object_or_404(PlacementDetails, pk=pk)
+        if request.method == 'POST':
+            form = PlacementDetails(request.POST, instance=placement)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Placement details updated successfully.')
+                return redirect('placement_year_details', year_id=placement.passout_year.id)
+        else:
+            form = PlacementDetails(instance=placement)
+        return render(request, 'adminpage/placement_edit.html', {'form': form, 'placement': placement})
+    except Exception as e:
+        messages.error(request, f'Error loading placement details: {str(e)}')
+        return redirect('placement_home')
 
 
 @login_required
@@ -1021,30 +1052,27 @@ def upload_offer_letter(request, placement_id):
                     document=uploaded_file
                 )
             
-            return JsonResponse({
-                'status': 'success',
-                'message': 'Offer letter uploaded successfully!'
-            })
+            messages.success(request, 'Offer letter uploaded successfully!')
+            return redirect('placement_year_details', year_id=placement.passout_year.id)
         
-        return JsonResponse({
-            'status': 'error',
-            'message': 'No document provided.'
-        }, status=400)
+        messages.error(request, 'No document provided.')
+        return redirect('placement_year_details', year_id=placement.passout_year.id)
         
     except Exception as e:
-        return JsonResponse({
-            'status': 'error',
-            'message': f'Error uploading offer letter: {str(e)}'
-        }, status=400)
-
+        messages.error(request, f'Error uploading offer letter: {str(e)}')
+        return redirect('placement_year_details', year_id=placement.passout_year.id)
 @login_required
 def delete_offer_letter(request, offer_id):
-    offer_letter = get_object_or_404(OfferLetter, id=offer_id)
-    placement = offer_letter.placement  # Get the associated placement
-    passout_year = placement.passout_year  # Get the passout year from placement
-    offer_letter.delete()
-    return redirect('placement_year_details', year_id=passout_year.id)  # Redirect to placement_year_details
-
+    try:
+        offer_letter = get_object_or_404(OfferLetter, id=offer_id)
+        placement = offer_letter.placement  # Get the associated placement
+        passout_year = placement.passout_year  # Get the passout year from placement
+        offer_letter.delete()
+        messages.success(request, 'Offer letter deleted successfully.')
+        return redirect('placement_year_details', year_id=passout_year.id)
+    except Exception as e:
+        messages.error(request, f'Error deleting offer letter: {str(e)}')
+        return redirect('placement_year_details', year_id=passout_year.id)
     
 @login_required
 def generate_student_graph(request):
