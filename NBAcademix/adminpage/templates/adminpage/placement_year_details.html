@@ -195,7 +195,6 @@ html, body {
 }
 
 /* Alert Styles */
-/* Alert Styles */
 .alert {
     background-color: white;
     color: black;
@@ -711,12 +710,12 @@ footer {
 
 <script>
     
- function showAlert(message, type = 'info') {
+    function showAlert(message, type = 'info') {
     // Create alert element
     const alert = document.createElement('div');
     alert.className = `alert alert-${type}`;
     alert.id = 'alert-message';
-    alert.textContent = message;
+    alert.textContent = message; // Changed from innerHTML to textContent for simple message
     
     // Remove any existing alerts
     const existingAlert = document.getElementById('alert-message');
@@ -738,6 +737,7 @@ footer {
         }, 300); // Match transition duration
     }, 3000);
 }
+
 
 // Initialize alert handling for existing alerts
 document.addEventListener('DOMContentLoaded', () => {
@@ -1072,61 +1072,97 @@ document.getElementById('editForm').addEventListener('submit', function(e) {
 
     // Form Submission Handler with Loading States
     function handleFormSubmission(form, validateFn, successMsg) {
-        if (!validateFn()) return;
+    if (!validateFn()) return;
 
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    submitBtn.disabled = true;
+
+    const formData = new FormData(form);
+    
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.status === 'success') {
+            showAlert('Details updated successfully'); // Updated success message
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            throw new Error(data.message || 'Operation failed');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert(error.message || 'An error occurred.', 'error');
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalBtnText;
+        submitBtn.disabled = false;
+    });
+    }
+    // Form Event Listeners
+    document.getElementById('addPlacementForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const form = this;
         const submitBtn = form.querySelector('button[type="submit"]');
         const originalBtnText = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-        submitBtn.disabled = true;
-
+        
+        // Get form data
         const formData = new FormData(form);
         
+        // Disable submit button and show loading state
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+        submitBtn.disabled = true;
+        
+        // Send AJAX request
         fetch(form.action, {
             method: 'POST',
             body: formData,
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRFToken': getCookie('csrftoken')
-            }
+            },
+            credentials: 'same-origin'
         })
         .then(response => {
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error('Network response was not ok');
             }
             return response.json();
         })
         .then(data => {
             if (data.status === 'success') {
-                showNotification('Success!', successMsg, 'success', 3000);
-                setTimeout(() => location.reload(), 1500);
+                showAlert('Placement details added successfully', 'success');
+                form.reset();  // Reset form
+                setTimeout(() => {
+                    window.location.reload();  // Reload page after success
+                }, 1500);
             } else {
-                throw new Error(data.message || 'Operation failed');
+                throw new Error(data.message || 'Failed to add placement details');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            showNotification('Error!', error.message || 'An error occurred.', 'danger', 3000);
+            showAlert(error.message || 'An error occurred while adding placement details.', 'error');
         })
         .finally(() => {
+            // Reset button state
             submitBtn.innerHTML = originalBtnText;
             submitBtn.disabled = false;
         });
-    }
-
-    // Form Event Listeners
-    const addPlacementForm = document.getElementById('addPlacementForm');
-    if (addPlacementForm) {
-        addPlacementForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            handleFormSubmission(this, () => {
-                const name = this.querySelector('input[name="name"]').value;
-                const usn = this.querySelector('input[name="usn"]').value;
-                const company = this.querySelector('input[name="company_name"]').value;
-                const ctc = this.querySelector('input[name="ctc"]').value;
-                return validateFormFields(name, usn, company, ctc);
-            }, 'Placement details added successfully!');
-        });
-    }
+    });
 
     const editForm = document.getElementById('editForm');
     if (editForm) {

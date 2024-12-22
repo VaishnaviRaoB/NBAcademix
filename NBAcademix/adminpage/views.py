@@ -948,44 +948,47 @@ def placement_year_details(request, year_id):
 
 # Add Placement Details
 
-@login_required
+# views.py
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+
+@require_http_methods(["POST"])
 def add_placement_details(request, year_id):
     try:
-        passout_year = get_object_or_404(PassoutYear, id=year_id)
+        # Get form data
+        name = request.POST.get('name')
+        usn = request.POST.get('usn')
+        company_name = request.POST.get('company_name')
+        ctc = request.POST.get('ctc')
+
+        # Your existing validation and database saving logic here
+        placement = PlacementDetails.objects.create(
+            passout_year_id=year_id,
+            name=name,
+            usn=usn,
+            company_name=company_name,
+            ctc=ctc
+        )
         
-        if request.method == 'POST':
-            # Validate required fields
-            name = request.POST.get('name')
-            usn = request.POST.get('usn')
-            company_name = request.POST.get('company_name')
-            ctc = request.POST.get('ctc')
-            
-            if not all([name, usn, company_name, ctc]):
-                messages.error(request, 'Please fill in all required fields.')
-                return redirect('placement_year_details', year_id=year_id)
-            
-            # Create placement details
-            PlacementDetails.objects.create(
-                passout_year=passout_year,
-                name=name,
-                usn=usn,
-                company_name=company_name,
-                ctc=ctc
-            )
-            
-            messages.success(request, 'Placement details added successfully.')
-            return redirect('placement_year_details', year_id=year_id)
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Placement details added successfully'
+            })
+        else:
+            messages.success(request, 'Placement details added successfully')
+            return redirect('placement_details', year_id=year_id)
             
     except Exception as e:
-        messages.error(request, 'Error adding placement details. Please try again.')
-        
-    return redirect('placement_year_details', year_id=year_id)
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            }, status=400)
+        else:
+            messages.error(request, f'Error: {str(e)}')
+            return redirect('placement_details', year_id=year_id)
 
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from .models import PlacementDetails
 
 @login_required
 def update_placement_details(request, placement_id):
