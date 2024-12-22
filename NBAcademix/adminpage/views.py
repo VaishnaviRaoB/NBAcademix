@@ -895,31 +895,32 @@ def placement_home(request):
 @login_required
 def update_passout_year(request, year_id):
     if request.method != 'POST':
-        return redirect('placement_home')
-        
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+    
     try:
         year_obj = PassoutYear.objects.get(id=year_id)
         new_year = request.POST.get('year')
         
         if not new_year:
-            messages.error(request, 'Please provide a year.')
-            return redirect('placement_home')
-            
+            return JsonResponse({'success': False, 'error': 'Please provide a year'})
+        
         # Check if the new year already exists for another record
         if PassoutYear.objects.filter(year=new_year).exclude(id=year_id).exists():
-            messages.error(request, 'This year already exists.')
-            return redirect('placement_home')
-            
+            return JsonResponse({'success': False, 'error': 'This year already exists'})
+        
         year_obj.year = new_year
         year_obj.save()
-        messages.success(request, 'Placement year updated successfully.')
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Placement year updated successfully',
+            'year': new_year
+        })
         
     except PassoutYear.DoesNotExist:
-        messages.error(request, 'Year not found.')
+        return JsonResponse({'success': False, 'error': 'Year not found'})
     except Exception as e:
-        messages.error(request, f'Error updating year: {str(e)}')
-    
-    return redirect('placement_home')
+        return JsonResponse({'success': False, 'error': str(e)})
 
 @login_required
 def placement_year_details(request, year_id):
@@ -962,9 +963,9 @@ def add_placement_details(request, year_id):
             if not all([name, usn, company_name, ctc]):
                 messages.error(request, 'Please fill in all required fields.')
                 return redirect('placement_year_details', year_id=year_id)
-                
+            
             # Create placement details
-            placement = PlacementDetails.objects.create(
+            PlacementDetails.objects.create(
                 passout_year=passout_year,
                 name=name,
                 usn=usn,
@@ -977,10 +978,10 @@ def add_placement_details(request, year_id):
             
     except Exception as e:
         messages.error(request, 'Error adding placement details. Please try again.')
-    
+        
     return redirect('placement_year_details', year_id=year_id)
 
-@login_required
+@login_required 
 def update_placement_details(request, placement_id):
     try:
         placement = get_object_or_404(PlacementDetails, id=placement_id)
@@ -991,16 +992,12 @@ def update_placement_details(request, placement_id):
             placement.ctc = request.POST.get('ctc')
             placement.save()
             
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'status': 'success'})
-            
             messages.success(request, 'Placement details updated successfully.')
             return redirect('placement_year_details', year_id=placement.passout_year.id)
+            
     except Exception as e:
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'status': 'error', 'message': str(e)})
         messages.error(request, f'Error updating placement details: {str(e)}')
-    
+        
     return redirect('placement_year_details', year_id=placement.passout_year.id)
     
 @login_required

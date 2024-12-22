@@ -50,9 +50,9 @@
             </thead>
             <tbody id="passoutYearsTableBody">
                 {% for year in passout_years %}
-                    <tr class="performance-row">
-                        <td>{{ year.year }}</td>
-                        <td class="action-buttons">
+    <tr class="performance-row" data-year-id="{{ year.id }}">
+        <td>{{ year.year }}</td>
+        <td class="action-buttons">
                             <a href="{% url 'placement_year_details' year.id %}" class="btn view-btn">
                                 <i class="fas fa-eye"></i> View Details
                             </a>
@@ -750,6 +750,7 @@ document.getElementById('updateForm').onsubmit = function(e) {
     e.preventDefault();
     const yearId = document.getElementById('yearId').value;
     const year = document.getElementById('yearInput').value;
+    const modal = document.getElementById('updateModal');
     
     fetch(`/update_passout_year/${yearId}/`, {
         method: 'POST',
@@ -759,18 +760,39 @@ document.getElementById('updateForm').onsubmit = function(e) {
         },
         body: `year=${year}`
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
-            location.reload();
+            // Update the table row directly without page reload
+            const yearRow = document.querySelector(`tr[data-year-id="${yearId}"]`);
+            if (yearRow) {
+                yearRow.querySelector('td:first-child').textContent = year;
+            }
+            
+            // Close the modal
+            modal.style.display = "none";
+            
+            // Show success message
+            showAlert(data.message, 'success');
+            
+            // Update the data attributes for the update button
+            const updateBtn = document.querySelector(`button[data-year-id="${yearId}"]`);
+            if (updateBtn) {
+                updateBtn.dataset.year = year;
+            }
         } else {
-            alert('Error updating year: ' + data.error);
+            showAlert(data.error, 'error');
         }
     })
     .catch(error => {
-        alert('Error updating year: ' + error);
+        showAlert('Error updating year: ' + error.message, 'error');
     });
-}
+};
 
 </script>
 {% endblock %}

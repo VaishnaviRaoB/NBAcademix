@@ -80,7 +80,7 @@
                             <i class="fas fa-edit"></i> Update
                         </button>
 
-                        <form method="post" action="{% url 'delete_placement_details' placement_id=placement.id %}" class="delete-form" onsubmit="return confirm('Are you sure you want to delete this record?');">
+                        <form method="post" action="{% url 'delete_placement_details' placement_id=placement.id %}" class="delete-form">
                             {% csrf_token %}
                             <button type="submit" class="btn delete-btn">
                                 <i class="fas fa-trash"></i> Delete
@@ -112,7 +112,7 @@
                                             </a>
                                         </div>
                                         <div class="document-delete-actions">
-                                            <form method="post" action="{% url 'delete_offer_letter' offer_id=placement.offer_letter.id %}" class="delete-form" onsubmit="return confirm('Are you sure you want to delete this offer letter?');">
+                                            <form method="post" action="{% url 'delete_offer_letter' offer_id=placement.offer_letter.id %}" class="delete-form">
                                                 {% csrf_token %}
                                                 <button type="submit" class="btn delete-btn">
                                                     <i class="fas fa-trash"></i> Delete
@@ -172,6 +172,7 @@
             </div>
         </div>
     </div>
+</div>
 <style>
 /* Global Styles */
 html, body {
@@ -1024,32 +1025,17 @@ window.closeEditModal = function() {
 };
 
 // Add this to handle form submission
+// In your script section, replace the edit form submission handler with:
 document.getElementById('editForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+    // Remove preventDefault() to allow normal form submission
+    const name = document.getElementById('editName').value;
+    const usn = document.getElementById('editUsn').value;
+    const company = document.getElementById('editCompany').value;
+    const ctc = document.getElementById('editCtc').value;
     
-    const formData = new FormData(this);
-    
-    fetch(this.action, {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            closeEditModal();
-            // Optionally refresh the page or update the UI
-            location.reload();
-        } else {
-            alert('Error updating placement details');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error updating placement details');
-    });
+    if (!validateFormFields(name, usn, company, ctc)) {
+        e.preventDefault();
+    }
 });
 
     // Document Modal Functions
