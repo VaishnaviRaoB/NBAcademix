@@ -981,24 +981,61 @@ def add_placement_details(request, year_id):
         
     return redirect('placement_year_details', year_id=year_id)
 
-@login_required 
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from .models import PlacementDetails
+
+@login_required
 def update_placement_details(request, placement_id):
     try:
         placement = get_object_or_404(PlacementDetails, id=placement_id)
+        
         if request.method == 'POST':
-            placement.name = request.POST.get('name')
-            placement.usn = request.POST.get('usn')
-            placement.company_name = request.POST.get('company_name')
-            placement.ctc = request.POST.get('ctc')
+            # Validate the data
+            name = request.POST.get('name')
+            usn = request.POST.get('usn')
+            company_name = request.POST.get('company_name')
+            ctc = request.POST.get('ctc')
+            
+            # Check if all required fields are present
+            if not all([name, usn, company_name, ctc]):
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'All fields are required'
+                    }, status=400)
+                messages.error(request, 'All fields are required')
+                return redirect('placement_year_details', year_id=placement.passout_year.id)
+            
+            # Update the placement details
+            placement.name = name
+            placement.usn = usn
+            placement.company_name = company_name
+            placement.ctc = ctc
             placement.save()
             
-            messages.success(request, 'Placement details updated successfully.')
-            return redirect('placement_year_details', year_id=placement.passout_year.id)
+            # Handle AJAX request
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Placement details updated successfully'
+                })
             
-    except Exception as e:
-        messages.error(request, f'Error updating placement details: {str(e)}')
+            messages.success(request, 'Placement details updated successfully')
+            
+        return redirect('placement_year_details', year_id=placement.passout_year.id)
         
-    return redirect('placement_year_details', year_id=placement.passout_year.id)
+    except Exception as e:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Error updating placement details: {str(e)}'
+            }, status=500)
+            
+        messages.error(request, f'Error updating placement details: {str(e)}')
+        return redirect('placement_year_details', year_id=placement.passout_year.id)
     
 @login_required
 def delete_passout_year(request, year_id):
@@ -1039,15 +1076,36 @@ def get_placement_for_edit(request, pk):
         messages.error(request, f'Error loading placement details: {str(e)}')
         return redirect('placement_home')
 
-
 @login_required
 def upload_offer_letter(request, placement_id):
-    try:
-        placement = get_object_or_404(PlacementDetails, id=placement_id)
-        
-        if request.method == 'POST' and request.FILES.get('document'):
+    if request.method == 'POST':
+        try:
+            placement = get_object_or_404(PlacementDetails, id=placement_id)
+            
+            if not request.FILES.get('document'):
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'No document provided.'
+                }, status=400)
+            
             uploaded_file = request.FILES['document']
             
+            # Validate file type and size here if needed
+            allowed_types = ['application/pdf', 'application/msword', 
+                           'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+            if uploaded_file.content_type not in allowed_types:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Invalid file type. Please upload PDF or Word documents only.'
+                }, status=400)
+                
+            if uploaded_file.size > 5 * 1024 * 1024:  # 5MB limit
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'File size should not exceed 5MB.'
+                }, status=400)
+            
+            # Save the file
             if hasattr(placement, 'offer_letter'):
                 placement.offer_letter.document = uploaded_file
                 placement.offer_letter.save()
@@ -1057,15 +1115,22 @@ def upload_offer_letter(request, placement_id):
                     document=uploaded_file
                 )
             
-            messages.success(request, 'Offer letter uploaded successfully!')
-            return redirect('placement_year_details', year_id=placement.passout_year.id)
-        
-        messages.error(request, 'No document provided.')
-        return redirect('placement_year_details', year_id=placement.passout_year.id)
-        
-    except Exception as e:
-        messages.error(request, f'Error uploading offer letter: {str(e)}')
-        return redirect('placement_year_details', year_id=placement.passout_year.id)
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Offer letter uploaded successfully!'
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Error uploading offer letter: {str(e)}'
+            }, status=500)
+    
+    return JsonResponse({
+        'status': 'error',
+        'message': 'Invalid request method.'
+    }, status=405)
+
 @login_required
 def delete_offer_letter(request, offer_id):
     try:
